@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Orange University Mobile Landing</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800&amp;family=Great+Vibes&amp;family=Playfair+Display:ital,wght@0,400..900;1,400..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography,container-queries"></script>
+<script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              primary: "#f97316", // Vibrant University Orange
+              secondary: "#fbbf24", // Warm Yellow/Gold highlight
+              "background-light": "#ffffff",
+              "background-dark": "#111827",
+            },
+            fontFamily: {
+              display: ["Montserrat", "sans-serif"],
+              script: ["Great Vibes", "cursive"],
+              serif: ["Playfair Display", "serif"],
+            },
+            borderRadius: {
+              DEFAULT: "0.375rem",
+            },
+          },
+        },
+      };
+    </script>
+<style type="text/tailwindcss">
+      .hero-overlay {
+        background: linear-gradient(rgba(249, 115, 22, 0.7), rgba(0, 0, 0, 0.8));
+      }
+      .ticker-animation {
+        display: inline-block;
+        padding-left: 100%;
+        animation: ticker 15s linear infinite;
+      }
+      @keyframes ticker {
+        0% { transform: translate(0, 0); }
+        100% { transform: translate(-100%, 0); }
+      }
+      body {
+        min-height: max(884px, 100dvh);
+      }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display overflow-x-hidden">
+<div class="h-11 w-full bg-primary flex items-center justify-between px-6 text-white text-xs font-semibold">
+<span>9:41</span>
+<div class="flex items-center gap-1">
+<span class="material-icons text-[14px]">signal_cellular_alt</span>
+<span class="material-icons text-[14px]">wifi</span>
+<span class="material-icons text-[14px] rotate-90">battery_full</span>
+</div>
+</div>
+<header class="bg-primary dark:bg-primary py-3 px-4 flex items-center justify-between shadow-md sticky top-0 z-50">
+<div class="flex items-center gap-3">
+<img alt="University Logo" class="h-10 w-10 rounded-full border border-white/30" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAq5VvbKkwJlSm_PFwAy2VUk_7aumFYHHhvILnyx3tCOr1rG2FVt8NBSnE1Mn12R8LPiIjCRHs64H0zjyfjV7TvSWq9UAd_1XJ__6QwPaIxgOuT0qGlKQsRKNP15zmlTPK3UwiTlEE284nQAoJ6aPpM4YwkClOSWpYJYFjcEpxjieR-ntZhUp6Z3Teg0nC9kqaWT4IHGu-1rK7XZwNpoz8u0JYwQtRz3UFjgOdNyXmm05UXuMxbRz3eoqh0_zpSvnjawaFN2N9NsBAl"/>
+<div>
+<h1 class="text-white text-lg font-serif tracking-widest leading-none uppercase">University</h1>
+<p class="text-white/80 text-[10px] uppercase tracking-tighter">Caraga State University</p>
+</div>
+</div>
+<button class="text-white">
+<span class="material-icons text-3xl">menu</span>
+</button>
+</header>
+<div class="bg-white dark:bg-zinc-800 border-b border-zinc-200 dark:border-zinc-700 h-10 flex items-center overflow-hidden">
+<div class="bg-primary text-white h-full px-4 flex items-center font-bold text-xs uppercase z-10 shrink-0">
+            Announcements
+        </div>
+<div class="flex-1 whitespace-nowrap overflow-hidden relative">
+<p class="ticker-animation text-zinc-700 dark:text-zinc-200 text-sm font-medium">
+                Enrollment for AY 2025-2026 is now ongoing! • Click here to view scholarship updates • Entrance exam results are now available • 
+            </p>
+</div>
+<div class="px-2 text-zinc-400 dark:text-zinc-500 flex items-center">
+<span class="material-icons text-lg">pause</span>
+</div>
+</div>
+<section class="relative h-[80vh] w-full flex flex-col justify-center items-center text-center px-6 overflow-hidden">
+<img alt="University Building" class="absolute inset-0 w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAjwPH4cDZLLHhZSyydgEleWukTGrg4hwH1m7LeDoJvahnKFBEfEj_JCo7-z4r6HgopGoJ19ybFQa2UgwBNQCSZaEuoi4pP-BgDwjvwIQO9YYNKV3noSMdbwXxIkN4ntF3t3ofaW1cLMC4SdI9_9cB-d-xFk4WyGb0yUOdTfdV5qFZrTcVJFLvI2TX5vdnqiE0QEvZT6guwDwUAwGpMp7-7aT0rj4V3dU2-s-jOuQOP5I1Pq9eo1MGv_7p5h7zPCqOXEIsbsvW-e_eR"/>
+<div class="absolute inset-0 hero-overlay"></div>
+<div class="relative z-10 flex flex-col items-center">
+<h2 class="text-white font-serif text-lg tracking-[0.2em] uppercase mb-1">Caraga State University</h2>
+<p class="text-white/80 text-[10px] italic mb-12 uppercase tracking-widest">Creating Futures. Empowering Communities.</p>
+<span class="font-script text-white text-5xl md:text-6xl mb-0 drop-shadow-lg">Welcome,</span>
+<h3 class="text-white font-black text-5xl md:text-7xl uppercase tracking-tighter mb-8 drop-shadow-2xl">
+                Golden <br/> Paddlers!
+            </h3>
+<div class="border-2 border-secondary bg-black/30 backdrop-blur-sm px-8 py-3 rounded-sm">
+<span class="text-secondary font-bold text-xl tracking-widest">AY 2025-2026</span>
+</div>
+</div>
+<div class="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce">
+<span class="material-icons text-white/50 text-3xl">expand_more</span>
+</div>
+</section>
+<div class="p-6 grid grid-cols-2 gap-4 -mt-10 relative z-20">
+<div class="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow-xl flex flex-col items-center justify-center text-center border border-zinc-100 dark:border-zinc-800">
+<div class="bg-primary/10 p-3 rounded-full mb-2">
+<span class="material-icons text-primary">school</span>
+</div>
+<span class="text-zinc-800 dark:text-zinc-100 font-bold text-sm">Admissions</span>
+</div>
+<div class="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow-xl flex flex-col items-center justify-center text-center border border-zinc-100 dark:border-zinc-800">
+<div class="bg-primary/10 p-3 rounded-full mb-2">
+<span class="material-icons text-primary">person_search</span>
+</div>
+<span class="text-zinc-800 dark:text-zinc-100 font-bold text-sm">Portals</span>
+</div>
+</div>
+<main class="px-6 py-12">
+<div class="flex items-center justify-between mb-6">
+<h4 class="text-2xl font-bold text-zinc-900 dark:text-white">Recent News</h4>
+<a class="text-primary font-semibold text-sm" href="#">View All</a>
+</div>
+<div class="space-y-6">
+<div class="flex gap-4 items-center group">
+<div class="w-24 h-24 rounded-lg overflow-hidden shrink-0">
+<img alt="News 1" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCni9N9CZGjn1peu38vvOXkiHOytGR2ZlBryw6K7Ytn2-c0Om7nhIPwfcZjmyZieQ048r9PDqug0luslefAgageB9wA85BSXguulqWusiVGmgzJx7ggxngtHBZ56a6KytJ49IBiTpzwV6oKc13oKo7uZVkxh-wdVh2lQioEaLmAmHKBc2jstTMbbGpKlea4N7vjbzr6ujzd0lQLuGrFD6qDhhH5ZGLkeQYINX5vni9b6C07L3fGWSDAXHDa1NwdIg0ouNpYzF4eJ8g4"/>
+</div>
+<div>
+<span class="text-primary text-xs font-bold uppercase">Campus Life</span>
+<h5 class="text-zinc-800 dark:text-zinc-100 font-bold text-lg leading-tight mt-1">CSU celebrates its 75th Foundation Day</h5>
+<p class="text-zinc-500 dark:text-zinc-400 text-xs mt-1">March 5, 2025</p>
+</div>
+</div>
+<div class="flex gap-4 items-center group">
+<div class="w-24 h-24 rounded-lg overflow-hidden shrink-0">
+<img alt="News 2" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBEvijzU9JjPlwfeNvDwb0jKGe67G1q2p5nOG_TXMwOXRVfw6u78mYx7i5FhC6ZTTTiLD4iQHu3hNTUbenlvrAye6VFjV8hjGHtSyM3h_7qDA_lgK4FeoJWdQOcUScEOZBUZHHItwvLajmxZxJugFeNAg2-t_CaxU7hY9cIUaTKWTAazcGyKWXkxxDO5dwoWWJQebWoxLwGV1DlX84CMeALNk1zoVWSC2PEXO9fBj2K9ZnzcXy3fCh_Ibin9QG6NXTik8cXhnbRRJAe"/>
+</div>
+<div>
+<span class="text-primary text-xs font-bold uppercase">Research</span>
+<h5 class="text-zinc-800 dark:text-zinc-100 font-bold text-lg leading-tight mt-1">New Research Grant for Sustainable Energy</h5>
+<p class="text-zinc-500 dark:text-zinc-400 text-xs mt-1">March 2, 2025</p>
+</div>
+</div>
+</div>
+</main>
+<button class="fixed bottom-6 right-6 bg-primary/80 backdrop-blur-sm p-3 rounded-lg text-white shadow-lg">
+<span class="material-icons">arrow_upward</span>
+</button>
+
+</body></html>
