@@ -12,9 +12,9 @@ return new class extends Migration
     public function up(): void
 {
     Schema::create('user_profiles', function (Blueprint $table) {
-        $table->id();
-        
-        $table->foreignId('user_id')->constrained('table_users', 'user_id')->onDelete('cascade');
+        $table->foreignId('user_id')->primary()
+        ->constrained('table_users', 'user_id')
+        ->onDelete('cascade');
         $table->string('profile_picture')->nullable();
         $table->text('bio')->nullable();
         $table->timestamps();
@@ -24,8 +24,8 @@ return new class extends Migration
     /**
      * Reverse the migrations.
      */
-    public function down(): void
+  public function down(): void
     {
-        Schema::dropIfExists('userprofiles');
+        Schema::dropIfExists('user_profiles');
     }
 };
