@@ -5,7 +5,6 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\EventController;
 
-// --- Public Routes ---
 Route::get('/', function () {
     return view('welcome');
 })->name('login');
