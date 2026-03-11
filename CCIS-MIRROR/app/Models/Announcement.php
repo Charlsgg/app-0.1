@@ -9,9 +9,6 @@ class Announcement extends Model
     use SoftDeletes;
     protected $table = 'table_announcement';
     protected $primaryKey = 'announcement_id';
-    
-    
-    // Set to true because the database is now handling the ID generation
     public $incrementing = true; 
     
     protected $fillable = [
@@ -32,6 +29,6 @@ class Announcement extends Model
     }
     public function attachments()
     {
-        return $this->hasMany(Announcement_Attachement::class, 'announcement_id', 'announcement_id');
+        return $this->hasMany(AnnouncementAttachment::class, 'announcement_id', 'announcement_id');
     }
 }

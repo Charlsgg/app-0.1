@@ -4,18 +4,25 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class Announcement_Attachement extends Model
+class AnnouncementAttachment extends Model
 {
     use SoftDeletes;
+
     protected $table = 'table_announcement_attachment';
     protected $primaryKey = 'attachment_id';
-    public $incrementing = false;
+    public $incrementing = true; 
     public $timestamps = true;
+
     protected $fillable = [
-        'attachment_id',
         'announcement_id',
         'file_path',
         'file_type',
     ];
+
+    public function announcement(): BelongsTo
+    {
+        return $this->belongsTo(Announcement::class, 'announcement_id', 'announcement_id');
+    }
 }
