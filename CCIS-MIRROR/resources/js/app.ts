@@ -1,6 +1,6 @@
 import { createApp } from 'vue'
 import Login from './components/Login.vue'
-import Dashboard from './components/Dashboard.vue'
+import Dashboard from '../pages/roles/cs-instructor/announcement/announcement.vue'
 import PublicBoard from './components/PublicBoard.vue' // Create this component
 
 const el = document.getElementById('app')
