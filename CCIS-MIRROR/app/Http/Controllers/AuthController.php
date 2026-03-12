@@ -67,6 +67,6 @@ class AuthController extends Controller
         }
 
         // Fallback for standard web requests
-        return redirect('/');
+        return redirect('/login');
     }
 }
