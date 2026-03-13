@@ -170,7 +170,7 @@ const submitForm = async () => {
               />
               <label for="remember-me" class="ml-2 block text-sm text-slate-400">Remember me</label>
             </div>
-            <a href="#" class="text-sm font-medium text-[#ec5b13] hover:text-[#ec5b13]/80 transition-colors">Forgot password?</a>
+            <a href="/forgot-password" class="text-sm font-medium text-[#ec5b13] hover:text-[#ec5b13]/80 transition-colors">Forgot password?</a>
           </div>
 
           <button 
@@ -186,7 +186,7 @@ const submitForm = async () => {
           <div class="text-center mt-6">
             <p class="text-slate-400 text-sm">
               Don't have an account? 
-              <a href="#" class="text-[#ec5b13] font-semibold hover:underline decoration-2 underline-offset-4 ml-1">Sign Up</a>
+              <a href="/signup" class="text-[#ec5b13] font-semibold hover:underline decoration-2 underline-offset-4 ml-1">Sign Up</a>
             </p>
           </div>
         </form>

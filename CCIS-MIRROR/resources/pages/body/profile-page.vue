@@ -73,7 +73,8 @@ onMounted(() => {
                             <div class="rounded-2xl shadow-sm p-8 flex flex-col items-center text-center transition-colors" :style="styles.cardBg">
                                 
                                 <div class="relative mb-6">
-                                    <div class="h-40 w-40 rounded-full ring-4 overflow-hidden flex items-center justify-center" :style="{ backgroundColor: surface.inputBg, ringColor: surface.borderSubtle }">
+                              <div class="h-40 w-40 rounded-full ring-4 overflow-hidden flex items-center justify-center" :style="{ backgroundColor: surface.inputBg, '--tw-ring-color': surface.borderSubtle }"
+>
                                         <img class="h-full w-full object-contain" alt="Profile Avatar" src="https://ui-avatars.com/api/?name=Sarah+Chen&size=200&background=random"/>
                                     </div>
                                     <button 

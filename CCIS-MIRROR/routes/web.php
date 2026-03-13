@@ -7,8 +7,18 @@ use App\Http\Controllers\EventController;
 
 
 Route::get('/login', function () {
-    return view('welcome'); 
+    return view('login'); 
 })->name('login');
+
+Route::get('/signup', function () {
+    return view('signup'); 
+})->name('signup');
+
+Route::get('/forgot-password', function () {
+    return view('forgot-password'); 
+})->name('password.request');
+
+
 
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 

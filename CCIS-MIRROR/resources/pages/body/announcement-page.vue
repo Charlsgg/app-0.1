@@ -4,7 +4,7 @@ export default { layout: null }
 
 <script setup lang="ts">
 import { ref, shallowRef, onMounted } from 'vue'
-import { Megaphone, Send } from 'lucide-vue-next'
+import { Megaphone } from 'lucide-vue-next'
 import { useTheme } from '../composable/usetheme.ts'
 import AppSidebar from '../components/appsidebar.vue'
 import AppNavbar from '../components/appnavbar.vue'
@@ -16,12 +16,8 @@ const props = defineProps<{
 const { theme, styles, surface, isDark, setUserType, initTheme } = useTheme()
 
 const isSidebarOpen = ref(false)
-const newTitle = ref('')
-const newContent = ref('')
 const announcements = ref<any[]>([])
 const csrfToken = ref('')
-const isPosting = ref(false)
-
 
 onMounted(() => {
     initTheme()
@@ -35,7 +31,7 @@ onMounted(() => {
     }
 })
 
-
+// Kept your fetch function in case you want to render dynamic posts above the static feed
 const fetchAnnouncements = async () => {
     try {
         const response = await fetch('/api/announcements')
@@ -57,52 +53,6 @@ const fetchAnnouncements = async () => {
         console.error('Error fetching announcements:', error)
     }
 }
-
-const postAnnouncement = async () => {
-    if (!newTitle.value.trim() || !newContent.value.trim()) {
-        alert('Please enter both a title and a message.')
-        return
-    }
-
-    isPosting.value = true
-
-    try {
-        const response = await fetch('/api/announcements', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                Accept: 'application/json',
-                'X-CSRF-TOKEN': csrfToken.value,
-            },
-            body: JSON.stringify({
-                title: newTitle.value,
-                content: newContent.value,
-                board_id: 1,
-            }),
-        })
-
-        if (response.ok) {
-            const savedPost = await response.json()
-            announcements.value.unshift({
-                id: savedPost.announcement_id,
-                title: savedPost.title,
-                content: savedPost.content,
-                date: 'Just now',
-                icon: shallowRef(Megaphone),
-            })
-            newTitle.value = ''
-            newContent.value = ''
-        } else {
-            const errorData = await response.json()
-            alert(errorData.message || 'Failed to save announcement.')
-        }
-    } catch (error) {
-        console.error('Error posting announcement:', error)
-        alert('A network error occurred.')
-    } finally {
-        isPosting.value = false
-    }
-}
 </script>
 
 <template>
@@ -110,7 +60,6 @@ const postAnnouncement = async () => {
         class="fixed inset-0 w-full h-full overflow-hidden font-['Space_Grotesk'] flex transition-colors duration-300"
         :style="{ ...styles.pageBg, color: surface.textPrimary }"
     >
-        <!-- Mobile Overlay -->
         <div
             v-if="isSidebarOpen"
             @click="isSidebarOpen = false"
@@ -118,140 +67,133 @@ const postAnnouncement = async () => {
             :style="{ backgroundColor: surface.overlayBg }"
         ></div>
 
-        <!-- Sidebar -->
         <AppSidebar
             :is-open="isSidebarOpen"
             :csrf-token="csrfToken"
             @close="isSidebarOpen = false"
         />
 
-        <!-- Main -->
         <main class="flex-1 flex flex-col h-full overflow-hidden min-w-0">
-            <!-- Navbar -->
             <AppNavbar
                 :user-name="user?.name"
                 @toggle-sidebar="isSidebarOpen = true"
             />
 
-            <!-- Content -->
             <div class="flex-1 overflow-y-auto p-4 md:p-8 w-full">
-                <div class="max-w-250 mx-auto pb-12">
-                    <!-- Page Heading -->
-                    <div class="mb-6 md:mb-8 flex flex-col gap-2">
-                        <h3
-                            class="text-2xl md:text-3xl font-bold tracking-tight"
-                            :style="styles.textPrimary"
-                        >
-                            {{ theme.announcementHeading }}
-                        </h3>
-                        <p :style="styles.textSecondary" class="text-sm md:text-base max-w-2xl">
-                            {{ theme.announcementSubheading }}
-                        </p>
-                    </div>
-
-                    <!-- Composer -->
-                    <div
-                        class="mb-10 rounded-2xl shadow-lg shadow-black/10 overflow-hidden flex flex-col transition-colors p-4 md:p-6"
-                        :style="styles.cardBg"
-                    >
-                        <input
-                            v-model="newTitle"
-                            type="text"
-                            placeholder="Announcement Title"
-                            class="w-full bg-transparent border-none focus:ring-0 text-xl md:text-2xl font-bold px-0 pb-4 outline-none mb-4"
-                            :style="{ ...styles.input, color: surface.textPrimary }"
-                            :class="isDark ? 'placeholder-slate-600' : 'placeholder-slate-400'"
-                        />
-
-                        <textarea
-                            v-model="newContent"
-                            placeholder="What's the latest update?"
-                            class="w-full min-h-32 bg-transparent border-none focus:ring-0 text-base outline-none resize-none"
-                            :style="{ color: surface.textPrimary }"
-                            :class="isDark ? 'placeholder-slate-600' : 'placeholder-slate-400'"
-                        ></textarea>
-
-                        <div
-                            class="mt-6 flex flex-col sm:flex-row items-end justify-end gap-4 pt-4"
-                            :style="styles.composerBorder"
-                        >
-                            <button
-                                @click="postAnnouncement"
-                                :disabled="isPosting"
-                                class="w-full sm:w-auto px-8 py-2.5 text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                                :style="styles.button"
-                                @mouseenter="(e: MouseEvent) => {
-                                    if (!isPosting) (e.currentTarget as HTMLElement).style.opacity = '0.9'
-                                }"
-                                @mouseleave="(e: MouseEvent) => {
-                                    (e.currentTarget as HTMLElement).style.opacity = '1'
-                                }"
+                <div class="max-w-7xl mx-auto pb-12 flex gap-8">
+                    
+                    <section class="flex-1 min-w-0 space-y-6">
+                        <div class="mb-6 md:mb-8 flex flex-col gap-2">
+                            <h3
+                                class="text-2xl md:text-3xl font-bold tracking-tight"
+                                :style="styles.textPrimary"
                             >
-                                <span v-if="isPosting">Posting...</span>
-                                <span v-else>Post Announcement</span>
-                                <Send :size="16" />
+                                General Announcements
+                            </h3>
+                            <p :style="styles.textSecondary" class="text-sm md:text-base max-w-2xl">
+                                Stay up to date with the latest news, events, and important notices.
+                            </p>
+                        </div>
+
+                        <div v-if="announcements.length > 0" class="flex flex-col gap-6 mb-6">
+                            <article
+                                v-for="post in announcements"
+                                :key="post.id"
+                                class="rounded-2xl shadow-sm border overflow-hidden p-6 transition-colors"
+                                :style="{ backgroundColor: surface.cardBg, borderColor: surface.borderSubtle }"
+                            >
+                                <div class="flex items-center gap-3 mb-4">
+                                    <div class="size-12 rounded-full flex items-center justify-center bg-black/5 dark:bg-white/5" :style="{ color: surface.textPrimary }">
+                                        <component :is="post.icon" :size="24" />
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold" :style="styles.textPrimary">{{ post.title }}</h3>
+                                        <p class="text-xs" :style="styles.textSecondary">{{ post.date }}</p>
+                                    </div>
+                                </div>
+                                <div class="text-sm leading-relaxed whitespace-pre-wrap" :style="styles.textSecondary" v-html="post.content"></div>
+                            </article>
+                        </div>
+
+                        <div class="space-y-6">
+        
+                        
+                        </div>
+                    </section>
+
+                    <aside class="w-80 shrink-0 hidden xl:flex flex-col h-fit sticky top-4 space-y-6">
+                        
+                        <div 
+                            class="rounded-2xl p-6 shadow-sm flex flex-col transition-colors border"
+                            :style="{ backgroundColor: surface.cardBg, borderColor: surface.borderSubtle }"
+                        >
+                            <h3 class="font-bold mb-4" :style="styles.textPrimary">Upcoming Deadlines</h3>
+                            <div class="space-y-4">
+                                <div class="flex gap-3">
+                                    <div class="size-10 rounded-lg flex flex-col items-center justify-center shrink-0" :style="{ backgroundColor: isDark ? 'rgba(239, 68, 68, 0.2)' : '#fef2f2', color: '#ef4444' }">
+                                        <span class="text-xs font-bold uppercase leading-tight">Oct</span>
+                                        <span class="text-sm font-bold leading-none">24</span>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-bold" :style="styles.textPrimary">CS101 Midterms</p>
+                                        <p class="text-xs mt-0.5" :style="styles.textSecondary">9:00 AM • Room 402</p>
+                                    </div>
+                                </div>
+                                <div class="flex gap-3">
+                                    <div class="size-10 rounded-lg flex flex-col items-center justify-center shrink-0" :style="{ backgroundColor: isDark ? 'rgba(59, 130, 246, 0.2)' : '#eff6ff', color: '#3b82f6' }">
+                                        <span class="text-xs font-bold uppercase leading-tight">Oct</span>
+                                        <span class="text-sm font-bold leading-none">25</span>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-bold" :style="styles.textPrimary">System Analysis Proposal</p>
+                                        <p class="text-xs mt-0.5" :style="styles.textSecondary">11:59 PM • Online</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <button 
+                                class="w-full mt-6 py-2 text-sm font-bold transition-colors border rounded-lg hover:opacity-80"
+                                :style="{ borderColor: surface.borderSubtle, color: surface.textSecondary }"
+                            >
+                                View Full Calendar
                             </button>
                         </div>
-                    </div>
-
-                    <!-- Announcements List -->
-                    <div class="flex flex-col gap-6">
-                        <div
-                            v-if="announcements.length === 0"
-                            class="text-center py-12 italic"
-                            :style="styles.textMuted"
+                        
+                        <div 
+                            class="rounded-2xl p-6 shadow-sm flex flex-col transition-colors border"
+                            :style="{ backgroundColor: surface.cardBg, borderColor: surface.borderSubtle }"
                         >
-                            No announcements posted yet.
-                        </div>
-
-                        <div
-                            v-for="post in announcements"
-                            :key="post.id"
-                            class="p-5 md:p-6 rounded-2xl transition-all flex flex-col sm:flex-row gap-5 md:gap-6 group"
-                            :style="{
-                                backgroundColor: surface.cardBg,
-                                border: styles.cardBorder,
-                            }"
-                            @mouseenter="(e: MouseEvent) => {
-                                (e.currentTarget as HTMLElement).style.border = styles.cardBorderHover
-                            }"
-                            @mouseleave="(e: MouseEvent) => {
-                                (e.currentTarget as HTMLElement).style.border = styles.cardBorder
-                            }"
-                        >
-                            <!-- Icon -->
-                            <div
-                                class="h-16 w-16 md:h-20 md:w-20 rounded-xl border shrink-0 flex items-center justify-center group-hover:scale-105 transition-transform shadow-inner"
-                                :style="styles.cardIcon"
-                            >
-                                <component :is="post.icon" :size="32" />
-                            </div>
-
-                            <!-- Content -->
-                            <div class="flex-1 min-w-0">
-                                <div
-                                    class="flex flex-col sm:flex-row sm:items-center justify-between mb-3 gap-1 pb-2"
-                                    :style="styles.cardDivider"
-                                >
-                                    <h5
-                                        class="text-base md:text-xl font-bold truncate"
-                                        :style="styles.textPrimary"
-                                    >
-                                        {{ post.title }}
-                                    </h5>
-                                    <span class="text-xs font-medium shrink-0" :style="styles.textMuted">
-                                        {{ post.date }}
+                            <p class="text-xs font-bold uppercase tracking-widest mb-4" :style="styles.textSecondary">
+                                Announcement Filters
+                            </p>
+                            <div class="space-y-1">
+                                <button class="w-full flex items-center justify-between px-4 py-2 text-sm rounded-lg transition-colors hover:bg-black/5 dark:hover:bg-white/5" :style="{ color: surface.textPrimary }">
+                                    <span class="flex items-center gap-2">
+                                        <span class="size-2 rounded-full bg-blue-500"></span> Computer Science
                                     </span>
-                                </div>
-
-                                <div
-                                    class="text-sm mb-4 leading-relaxed whitespace-pre-wrap"
-                                    :style="styles.textSecondary"
-                                    v-html="post.content"
-                                ></div>
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold" :style="{ backgroundColor: surface.inputBg, color: surface.textSecondary }">12</span>
+                                </button>
+                                <button class="w-full flex items-center justify-between px-4 py-2 text-sm rounded-lg transition-colors hover:bg-black/5 dark:hover:bg-white/5" :style="{ color: surface.textPrimary }">
+                                    <span class="flex items-center gap-2">
+                                        <span class="size-2 rounded-full bg-emerald-500"></span> Information Technology
+                                    </span>
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold" :style="{ backgroundColor: surface.inputBg, color: surface.textSecondary }">8</span>
+                                </button>
+                                <button class="w-full flex items-center justify-between px-4 py-2 text-sm rounded-lg transition-colors hover:bg-black/5 dark:hover:bg-white/5" :style="{ color: surface.textPrimary }">
+                                    <span class="flex items-center gap-2">
+                                        <span class="size-2 rounded-full bg-amber-500"></span> Information Systems
+                                    </span>
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold" :style="{ backgroundColor: surface.inputBg, color: surface.textSecondary }">5</span>
+                                </button>
+                                <button class="w-full flex items-center justify-between px-4 py-2 text-sm rounded-lg transition-colors hover:bg-black/5 dark:hover:bg-white/5" :style="{ color: surface.textPrimary }">
+                                    <span class="flex items-center gap-2">
+                                        <span class="size-2 rounded-full bg-purple-500"></span> CCIS LSG
+                                    </span>
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold" :style="{ backgroundColor: surface.inputBg, color: surface.textSecondary }">20</span>
+                                </button>
                             </div>
                         </div>
-                    </div>
+                    </aside>
+
                 </div>
             </div>
         </main>

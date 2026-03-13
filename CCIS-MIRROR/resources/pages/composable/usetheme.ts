@@ -4,12 +4,6 @@ export interface ThemeColors {
     label: string
     abbr: string
     accent: string
-    homeTitle: string
-    announcementTitle: string
-    eventsTitle: string
-    profileTitle: string
-    announcementHeading: string
-    announcementSubheading: string
     homePath: string
     eventsPath: string
     announcementPath: string
@@ -26,14 +20,8 @@ const userType = ref<string>('is_instructor')
 const themeMap: Record<string, ThemeColors> = {
     it_instructor: {
         label: 'Information Technology Society',
-        abbr: 'ITS',
+        abbr: 'IT',
         accent: '#3b82f6',
-        homeTitle: 'ITS Home',
-        announcementTitle: 'ITS Announcements',
-        eventsTitle: 'ITS Events',
-        profileTitle: 'ITS Profile',
-        announcementHeading: 'Information Technology Announcements',
-        announcementSubheading: 'Stay updated with the latest IT academic updates.',
         homePath: '/it/home-page',
         eventsPath: '/it/events-page',
         announcementPath: '/it/announcement-page',
@@ -41,14 +29,8 @@ const themeMap: Record<string, ThemeColors> = {
     },
     cs_instructor: {
         label: 'Computer Science',
-        abbr: 'CSS',
+        abbr: 'CS',
         accent: '#9a0303',
-        homeTitle: 'CSS Home',
-        announcementTitle: 'CSS Announcements',
-        eventsTitle: 'CSS Events',
-        profileTitle: 'CSS Profile',
-        announcementHeading: 'Computer Science Announcements',
-        announcementSubheading: 'Stay updated with the latest CS academic updates.',
         homePath: '/cs/home-page',
         eventsPath: '/cs/events-page',
         announcementPath: '/cs/announcement-page',
@@ -56,14 +38,8 @@ const themeMap: Record<string, ThemeColors> = {
     },
     is_instructor: {
         label: 'Information System',
-        abbr: 'ISS',
+        abbr: 'IS',
         accent: '#32DD41',
-        homeTitle: 'ISS Home',
-        announcementTitle: 'ISS Announcements',
-        eventsTitle: 'ISS Events',
-        profileTitle: 'ISS Profile',
-        announcementHeading: 'Information System Announcements',
-        announcementSubheading: 'Stay updated with the latest IS academic updates.',
         homePath: '/is/home-page',
         eventsPath: '/is/events-page',
         announcementPath: '/is/announcement-page',
@@ -73,12 +49,6 @@ const themeMap: Record<string, ThemeColors> = {
         label: 'CCIS Local Student Government',
         abbr: 'LSG',
         accent: '#ec5b13',
-        homeTitle: 'LSG Home',
-        announcementTitle: 'LSG Announcements',
-        eventsTitle: 'LSG Events',
-        profileTitle: 'LSG Profile',
-        announcementHeading: 'LSG Announcements',
-        announcementSubheading: 'Stay updated with the latest student government updates.',
         homePath: '/lsg/home-page',
         eventsPath: '/lsg/events-page',
         announcementPath: '/lsg/announcement-page',
@@ -130,6 +100,8 @@ export function useTheme() {
             inputBg: '#f8fafc',
             inputBorder: '#e2e8f0',
             overlayBg: 'rgba(0,0,0,0.5)',
+        
+        
         }
     })
 
