@@ -1,14 +1,19 @@
 import { ref, computed, watch, onMounted } from 'vue'
 
-// ─── Types ───────────────────────────────────────────────────────
 export interface ThemeColors {
     label: string
     abbr: string
     accent: string
-    dashTitle: string
+    homeTitle: string
+    announcementTitle: string
+    eventsTitle: string
+    profileTitle: string
     announcementHeading: string
     announcementSubheading: string
-    dashboardPath: string
+    homePath: string
+    eventsPath: string
+    announcementPath: string
+    profilePath: string
 }
 
 export type Mode = 'light' | 'dark'
@@ -23,37 +28,61 @@ const themeMap: Record<string, ThemeColors> = {
         label: 'Information Technology Society',
         abbr: 'ITS',
         accent: '#3b82f6',
-        dashTitle: 'ITS Dashboard',
+        homeTitle: 'ITS Home',
+        announcementTitle: 'ITS Announcements',
+        eventsTitle: 'ITS Events',
+        profileTitle: 'ITS Profile',
         announcementHeading: 'Information Technology Announcements',
         announcementSubheading: 'Stay updated with the latest IT academic updates.',
-        dashboardPath: '/it/dashboard',
+        homePath: '/it/home-page',
+        eventsPath: '/it/events-page',
+        announcementPath: '/it/announcement-page',
+        profilePath: '/it/profile-page',
     },
     cs_instructor: {
         label: 'Computer Science',
         abbr: 'CSS',
         accent: '#9a0303',
-        dashTitle: 'CSS Dashboard',
+        homeTitle: 'CSS Home',
+        announcementTitle: 'CSS Announcements',
+        eventsTitle: 'CSS Events',
+        profileTitle: 'CSS Profile',
         announcementHeading: 'Computer Science Announcements',
         announcementSubheading: 'Stay updated with the latest CS academic updates.',
-        dashboardPath: '/cs/dashboard',
+        homePath: '/cs/home-page',
+        eventsPath: '/cs/events-page',
+        announcementPath: '/cs/announcement-page',
+        profilePath: '/cs/profile-page',
     },
     is_instructor: {
         label: 'Information System',
         abbr: 'ISS',
         accent: '#32DD41',
-        dashTitle: 'ISS Dashboard',
+        homeTitle: 'ISS Home',
+        announcementTitle: 'ISS Announcements',
+        eventsTitle: 'ISS Events',
+        profileTitle: 'ISS Profile',
         announcementHeading: 'Information System Announcements',
         announcementSubheading: 'Stay updated with the latest IS academic updates.',
-        dashboardPath: '/is/dashboard',
+        homePath: '/is/home-page',
+        eventsPath: '/is/events-page',
+        announcementPath: '/is/announcement-page',
+        profilePath: '/is/profile-page',
     },
     lsg_officer: {
         label: 'CCIS Local Student Government',
         abbr: 'LSG',
         accent: '#ec5b13',
-        dashTitle: 'LSG Dashboard',
+        homeTitle: 'LSG Home',
+        announcementTitle: 'LSG Announcements',
+        eventsTitle: 'LSG Events',
+        profileTitle: 'LSG Profile',
         announcementHeading: 'LSG Announcements',
         announcementSubheading: 'Stay updated with the latest student government updates.',
-        dashboardPath: '/lsg/dashboard',
+        homePath: '/lsg/home-page',
+        eventsPath: '/lsg/events-page',
+        announcementPath: '/lsg/announcement-page',
+        profilePath: '/lsg/profile-page',
     },
 }
 

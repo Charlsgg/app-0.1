@@ -1,6 +1,6 @@
 <div 
     id="app"
-    data-page="dashboard"
+    data-page="announcement-page"
     data-user='@json(Auth::user())'>
 </div>
 <meta name="csrf-token" content="{{ csrf_token() }}">

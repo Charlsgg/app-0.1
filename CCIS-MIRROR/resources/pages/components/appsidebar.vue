@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Calendar, LayoutDashboard,User, Home, Megaphone, LogOut, X } from 'lucide-vue-next'
+import { ref, computed, onMounted } from 'vue'
+import { Calendar, LayoutDashboard, User, Home, Megaphone, LogOut, X } from 'lucide-vue-next'
 import { useTheme } from '../composable/usetheme'
 
 const props = defineProps<{
@@ -12,8 +13,21 @@ const emit = defineEmits<{
 }>()
 
 const { theme, styles, surface, isDark } = useTheme()
-</script>
 
+const currentPath = ref('')
+
+onMounted(() => {
+    currentPath.value = window.location.pathname
+})
+
+// 2. Define your navigation items dynamically
+const navItems = computed(() => [
+    { name: 'Home', icon: Home, path: theme.value.homePath },
+    { name: 'Events', icon: Calendar, path: theme.value.eventsPath },
+    { name: 'Announcements', icon: Megaphone, path: theme.value.announcementPath },
+    { name: 'Profile', icon: User, path: theme.value.profilePath },
+])
+</script>
 <template>
     <aside
         :class="[
@@ -23,7 +37,6 @@ const { theme, styles, surface, isDark } = useTheme()
         :style="styles.sidebarBg"
     >
         <div class="p-6 flex flex-col h-full">
-            <!-- Close (mobile) -->
             <button
                 @click="emit('close')"
                 class="md:hidden absolute top-6 right-6 transition-colors"
@@ -32,7 +45,6 @@ const { theme, styles, surface, isDark } = useTheme()
                 <X :size="24" />
             </button>
 
-            <!-- Brand -->
             <div class="flex items-center gap-3 mb-8 mt-2 md:mt-0">
                 <div
                     class="h-10 w-10 shrink-0 rounded-full flex items-center justify-center border shadow-lg"
@@ -48,79 +60,42 @@ const { theme, styles, surface, isDark } = useTheme()
                 </h1>
             </div>
 
-            <!-- Nav -->
             <nav class="flex-1 flex flex-col gap-1 overflow-y-auto pr-2 -mr-2">
-                <div class="mt-2">
-                    <!-- Active item -->
-                    <div
-                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white shadow-lg mb-2"
-                        :style="styles.sidebarActive"
+                <div class="mt-2 flex flex-col gap-1.5">
+                    
+                    <a
+                        v-for="item in navItems"
+                        :key="item.name"
+                        :href="item.path"
+                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all"
+                        :style="currentPath === item.path ? styles.sidebarActive : { color: surface.textSecondary, fontWeight: 500 }"
+                        @mouseenter="(e: MouseEvent) => {
+                            // Only apply hover effect if it is NOT the active item
+                            if (currentPath !== item.path) {
+                                const el = e.currentTarget as HTMLElement
+                                el.style.backgroundColor = surface.hoverBg
+                                el.style.color = surface.textPrimary
+                            }
+                        }"
+                        @mouseleave="(e: MouseEvent) => {
+                            // Only remove hover effect if it is NOT the active item
+                            if (currentPath !== item.path) {
+                                const el = e.currentTarget as HTMLElement
+                                el.style.backgroundColor = 'transparent'
+                                el.style.color = surface.textSecondary
+                            }
+                        }"
                     >
-                        <Home :size="20" />
-                        <span class="text-sm font-bold tracking-wide">Home</span>
-                    </div>
+                        <component :is="item.icon" :size="20" />
+                        
+                        <span :class="{ 'font-bold tracking-wide': currentPath === item.path }">
+                            {{ item.name }}
+                        </span>
+                    </a>
 
-                    <!-- Sub-items -->
-                    <div
-                        class="ml-5 mt-2 flex flex-col gap-1.5 border-l pl-4 py-1"
-                        :style="styles.sidebarBorderLeft"
-                    >
-                        <a
-                            href="#"
-                            class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
-                            :style="{ color: surface.textSecondary }"
-                            @mouseenter="(e: MouseEvent) => {
-                                const el = e.currentTarget as HTMLElement
-                                el.style.backgroundColor = surface.hoverBg
-                                el.style.color = surface.textPrimary
-                            }"
-                            @mouseleave="(e: MouseEvent) => {
-                                const el = e.currentTarget as HTMLElement
-                                el.style.backgroundColor = 'transparent'
-                                el.style.color = surface.textSecondary
-                            }"
-                        >
-                            <Calendar :size="18" /> Events
-                        </a>
-                        <a
-                            href="#"
-                            class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
-                            :style="{ color: surface.textSecondary }"
-                            @mouseenter="(e: MouseEvent) => {
-                                const el = e.currentTarget as HTMLElement
-                                el.style.backgroundColor = surface.hoverBg
-                                el.style.color = surface.textPrimary
-                            }"
-                            @mouseleave="(e: MouseEvent) => {
-                                const el = e.currentTarget as HTMLElement
-                                el.style.backgroundColor = 'transparent'
-                                el.style.color = surface.textSecondary
-                            }"
-                        >
-                            <Megaphone :size="18" /> Announcements
-                        </a>
-                        <a
-                            href="#"
-                            class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
-                            :style="{ color: surface.textSecondary }"
-                            @mouseenter="(e: MouseEvent) => {
-                                const el = e.currentTarget as HTMLElement
-                                el.style.backgroundColor = surface.hoverBg
-                                el.style.color = surface.textPrimary
-                            }"
-                            @mouseleave="(e: MouseEvent) => {
-                                const el = e.currentTarget as HTMLElement
-                                el.style.backgroundColor = 'transparent'
-                                el.style.color = surface.textSecondary
-                            }"
-                        >
-                            <User :size="18" /> Profile
-                        </a>
-                    </div>
                 </div>
             </nav>
 
-            <!-- Logout -->
             <div class="mt-auto pt-6 shrink-0" :style="{ borderTop: `1px solid ${surface.borderSubtle}` }">
                 <form action="/logout" method="POST">
                     <input type="hidden" name="_token" :value="csrfToken" />
