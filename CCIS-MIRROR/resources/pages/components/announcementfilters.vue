@@ -1,19 +1,28 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import { useTheme } from '../composable/usetheme.ts'
 
-defineProps<{
-    stats: { cs: number; it: number; is: number; lsg: number }
+const props = defineProps<{
+    stats: { cs: number; it: number; is: number; lsg: number; all: number }
 }>()
 
+const emit = defineEmits(['filterChange'])
 const { styles, surface } = useTheme()
 
-// Define filters for cleaner template loop
+// Track which filter is currently active
+const activeFilter = ref<string | null>(null)
+
 const filters = [
-    { key: 'cs', label: 'Computer Science', color: 'bg-blue-500' },
-    { key: 'it', label: 'Information Technology', color: 'bg-emerald-500' },
-    { key: 'is', label: 'Information Systems', color: 'bg-amber-500' },
-    { key: 'lsg', label: 'CCIS LSG', color: 'bg-purple-500' },
+    { key: 'cs', label: 'Computer Science', color: 'bg-blue-500', role: 'cs_instructor' },
+    { key: 'it', label: 'Information Technology', color: 'bg-emerald-500', role: 'it_instructor' },
+    { key: 'is', label: 'Information Systems', color: 'bg-amber-500', role: 'is_instructor' },
+    { key: 'lsg', label: 'CCIS LSG', color: 'bg-purple-500', role: 'lsg_officer' },
 ]
+
+const setFilter = (role: string | null) => {
+    activeFilter.value = role
+    emit('filterChange', role) 
+}
 </script>
 
 <template>
@@ -21,31 +30,73 @@ const filters = [
         class="rounded-xl p-6 shadow-sm flex flex-col transition-colors border"
         :style="{ backgroundColor: surface.cardBg, borderColor: surface.borderSubtle }"
     >
-        <p class="text-[10px] font-black uppercase tracking-[0.2em] mb-5" :style="styles.textSecondary">
-            Filter by Topic
-        </p>
+        <div class="flex justify-between items-center mb-5">
+            <p class="text-[10px] font-black uppercase tracking-[0.2em]" :style="styles.textSecondary">
+                Filter by Topic
+            </p>
+            <button 
+                v-if="activeFilter"
+                @click="setFilter(null)"
+                class="text-[10px] font-bold text-red-500 hover:text-red-400 transition-colors uppercase tracking-wider"
+            >
+                Clear
+            </button>
+        </div>
         
         <div class="space-y-1">
             <button 
+                @click="setFilter(null)"
+                class="w-full flex items-center justify-between px-3 py-2.5 text-sm rounded-lg transition-all group"
+                :class="[
+                    activeFilter === null 
+                    ? 'bg-black/5 dark:bg-white/10 ring-1 ring-inset ring-black/5 dark:ring-white/10' 
+                    : 'hover:bg-black/5 dark:hover:bg-white/5'
+                ]"
+                :style="{ color: surface.textPrimary }"
+            >
+                <span class="flex items-center gap-3">
+                    <span class="size-2 rounded-full bg-slate-400"></span>
+                    <span class="font-medium">All Announcements</span>
+                </span>
+                <span 
+                    class="px-2 py-0.5 rounded text-[10px] font-bold border" 
+                    :style="{ backgroundColor: surface.inputBg, borderColor: surface.borderSubtle, color: surface.textSecondary }"
+                >
+                    {{ stats.all }}
+                </span>
+            </button>
+
+            <button 
                 v-for="filter in filters" 
                 :key="filter.key"
-                class="w-full flex items-center justify-between px-3 py-2.5 text-sm rounded-lg transition-all group hover:bg-black/5 dark:hover:bg-white/5"
+                @click="setFilter(filter.role)"
+                class="w-full flex items-center justify-between px-3 py-2.5 text-sm rounded-lg transition-all group"
+                :class="[
+                    activeFilter === filter.role 
+                    ? 'bg-black/10 dark:bg-white/10 ring-1 ring-inset ring-black/5 dark:ring-white/20' 
+                    : 'hover:bg-black/5 dark:hover:bg-white/5'
+                ]"
                 :style="{ color: surface.textPrimary }"
             >
                 <span class="flex items-center gap-3">
                     <span class="size-2 rounded-full" :class="filter.color"></span>
-                    <span class="font-medium group-hover:translate-x-1 transition-transform">{{ filter.label }}</span>
+                    <span 
+                        class="font-medium transition-transform"
+                        :class="{ 'translate-x-1': activeFilter === filter.role }"
+                    >
+                        {{ filter.label }}
+                    </span>
                 </span>
                 
                 <span 
                     class="px-2 py-0.5 rounded text-[10px] font-bold border" 
                     :style="{ 
-                        backgroundColor: surface.inputBg, 
+                        backgroundColor: activeFilter === filter.role ? surface.cardBg : surface.inputBg, 
                         borderColor: surface.borderSubtle,
-                        color: surface.textSecondary 
+                        color: activeFilter === filter.role ? surface.textPrimary : surface.textSecondary 
                     }"
                 >
-                    {{ stats[filter.key as keyof typeof stats] }}
+                    {{ stats[filter.key as keyof typeof stats] ?? 0 }}
                 </span>
             </button>
         </div>

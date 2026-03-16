@@ -4,7 +4,9 @@ namespace Database\Seeders;
 
 use App\Models\User;
 use App\Models\Board;
+use App\Models\Event;
 use App\Models\Announcement;
+use App\Models\Notification;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 
@@ -12,102 +14,76 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // 1. Seed Users
         $users = [
-            [
-                'user_id' => 101,
-                'name' => 'Juan Dela Cruz',
-                'email' => 'admin1@gmail.com',
-                'user_type' => 'it_instructor',
-                'password' => bcrypt('password123'),
-                'created_at' => Carbon::now(),
-            ],
-            [
-                'user_id' => 102,
-                'name' => 'Maria Clara',
-                'email' => 'admin2@gmail.com',
-                'user_type' => 'cs_instructor',
-                'password' => bcrypt('password123'),
-                'created_at' => Carbon::now(),
-            ],
-            [
-                'user_id' => 103,
-                'name' => 'Jose Rizal',
-                'email' => 'admin3@gmail.com',
-                'user_type' => 'lsg_officer',
-                'password' => bcrypt('password123'),
-                'created_at' => Carbon::now(),
-            ],
-            [
-                'user_id' => 105,
-                'name' => 'Imong mama',
-                'email' => 'admin4@gmail.com',
-                'user_type' => 'is_instructor',
-                'password' => bcrypt('password123'),
-                'created_at' => Carbon::now(),
-            ],
-            [
-                'user_id' => 109,
-                'name' => 'sad mama',
-                'email' => 'admin5@gmail.com',
-                'user_type' => 'is_instructor',
-                'password' => bcrypt('password123'),
-                'created_at' => Carbon::now(),
-            ]
-
+            ['user_id' => 101, 'name' => 'Juan Dela Cruz', 'email' => 'admin1@gmail.com', 'user_type' => 'it_instructor', 'password' => bcrypt('password')],
+            ['user_id' => 102, 'name' => 'Maria Clara', 'email' => 'admin2@gmail.com', 'user_type' => 'is_instructor', 'password' => bcrypt('password')],
+            ['user_id' => 103, 'name' => 'Jose Rizal', 'email' => 'admin3@gmail.com', 'user_type' => 'cs_instructor', 'password' => bcrypt('password')],
+            ['user_id' => 104, 'name' => 'Andres Bonifacio', 'email' => 'admin4@gmail.com', 'user_type' => 'lsg_officer', 'password' => bcrypt('password')],
+            ['user_id' => 105, 'name' => 'Apolinario Mabini', 'email' => 'admin5@gmail.com', 'user_type' => 'it_instructor', 'password' => bcrypt('password')],
         ];
+        foreach ($users as $u) User::create($u);
 
-        foreach ($users as $user) {
-            User::create($user);
-        }
-
-        // 2. Seed Boards
         $boards = [
-            [
-                'board_id' => 1, // Changed this back to 1 to match the announcements below
-                'board_name' => 'IT Department Announcements',
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-            ],
-            [
-                'board_id' => 2, 
-                'board_name' => 'CS Department Announcements',
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-            ],
-            [
-                'board_id' => 3, 
-                'board_name' => 'CCIS Local Government',
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-            ],
+            ['board_id' => 1, 'board_name' => 'IT Department'],
+            ['board_id' => 2, 'board_name' => 'CS Department'],
+            ['board_id' => 3, 'board_name' => 'LSG Announcements'],
+            ['board_id' => 4, 'board_name' => 'General CCIS'],
         ];
+        foreach ($boards as $b) Board::create($b);
 
-        // I removed the duplicate foreach loop here!
-        foreach ($boards as $board) {
-            Board::create($board); 
-        }
 
-        // // 3. Seed Announcements
-        // $announcements = [
-        //     [
-        //         'announcement_id' => 1001,
-        //         'board_id' => 1, // IT Department
-        //         'author_id' => 101, // Juan
-        //         'content' => 'Welcome to the new semester! Please check your schedules.',
-        //         'created_at' => Carbon::now(),
-        //     ],
-        //     [
-        //         'announcement_id' => 1002,
-        //         'board_id' => 3, // CCISLG
-        //         'author_id' => 103, // Jose
-        //         'content' => 'Upcoming General Assembly next Friday at the gym.',
-        //         'created_at' => Carbon::now()->subDays(2),
-        //     ]
-        // ];
+        $announcements = [
+            ['announcement_id' => 1001, 'board_id' => 1, 'author_id' => 101, 'title' => 'Capstone Orientation', 'content' => 'Orientation for 4th years.', 'topic' => 'Academic', 'likes_count' => 15],
+            ['announcement_id' => 1002, 'board_id' => 3, 'author_id' => 103, 'title' => 'Foundation Day', 'content' => 'Join the festivities!', 'topic' => 'Events', 'likes_count' => 50],
+            ['announcement_id' => 1003, 'board_id' => 2, 'author_id' => 102, 'title' => 'Coding Competition', 'content' => 'Register now for Hackathon.', 'topic' => 'Contest', 'likes_count' => 8],
+        ];
+        foreach ($announcements as $a) Announcement::create($a);
+$events = [
+    [
+        'event_id' => 501, 
+        'user_id' => 101, 
+        'board_id' => 1,
+        'title' => 'IT Faculty Meeting', 
+        'content' => 'Room 302', 
+        'event_type' => 'Meeting',
+        'start_time' => Carbon::now()->addHours(2), 
+        'end_time' => Carbon::now()->addHours(3),
+    ],
+    [
+        'event_id' => 502, 
+        'user_id' => 103, 
+        'board_id' => 3,
+        'title' => 'Student GA', 
+        'content' => 'Gymnasium', 
+        'event_type' => 'Assembly',
+        'start_time' => Carbon::now()->addHours(18), 
+        'end_time' => Carbon::now()->addHours(20),
+    ],
+    [
+        'event_id' => 503, 
+        'user_id' => 102, 
+        'board_id' => 2,
+        'title' => 'Thesis Defense', 
+        'content' => 'Lab 1', 
+        'event_type' => 'Academic',
+        'start_time' => Carbon::now()->addDays(5), 
+        'end_time' => Carbon::now()->addDays(5)->addHours(2),
+    ],
+];
 
-        // foreach ($announcements as $announcement) {
-        //     Announcement::create($announcement);
-        // }
+foreach ($events as $e) {
+    Event::create($e);
+}
+
+        // 5. Seed Many Manual Notifications
+        $notifications = [
+            // Likes for Juan (101)
+            ['reciepient_id' => 101, 'announcement_id' => 1001, 'event_id' => null, 'message' => 'Maria Clara liked your Capstone announcement', 'is_read' => false],
+            ['reciepient_id' => 101, 'announcement_id' => null, 'event_id' => 501, 'message' => 'Apolinario Mabini liked your Meeting event', 'is_read' => true],
+            
+            ['reciepient_id' => 103, 'announcement_id' => 1002, 'event_id' => null, 'message' => 'Andres Bonifacio liked the Foundation Day post', 'is_read' => false],
+            ['reciepient_id' => 102, 'announcement_id' => null, 'event_id' => null, 'message' => 'Your profile was updated successfully', 'is_read' => true],
+        ];
+        foreach ($notifications as $n) Notification::create($n);
     }
 }
