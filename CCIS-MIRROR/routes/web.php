@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\UserProfileController;
+use App\Http\Controllers\UserAnnouncementController;
 
 Route::get('/login', function () {
     return view('login'); 
@@ -131,6 +132,8 @@ Route::middleware('auth')->group(function () {
     
 
     Route::prefix('api')->group(function () {
+        Route::get('/my-announcements', [UserAnnouncementController::class, 'index']);
+
         Route::get('/announcements', [AnnouncementController::class, 'index']);
         Route::post('/announcements', [AnnouncementController::class, 'store']);
         Route::put('/announcements/{id}', [AnnouncementController::class, 'update']);

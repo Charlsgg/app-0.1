@@ -2,18 +2,17 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class AnnouncementAttachment extends Model
 {
-    use SoftDeletes;
+    use HasFactory, SoftDeletes;
 
     protected $table = 'table_announcement_attachment';
     protected $primaryKey = 'attachment_id';
-    public $incrementing = true; 
-    public $timestamps = true;
 
     protected $fillable = [
         'announcement_id',
