@@ -6,6 +6,8 @@ use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\UserProfileController;
 use App\Http\Controllers\UserAnnouncementController;
+use App\Http\Controllers\AnnouncementBoardController;
+
 
 Route::get('/login', function () {
     return view('login'); 
@@ -133,6 +135,7 @@ Route::middleware('auth')->group(function () {
 
     Route::prefix('api')->group(function () {
         Route::get('/my-announcements', [UserAnnouncementController::class, 'index']);
+        Route::get('/board-data', [AnnouncementBoardController::class, 'index']);
 
         Route::get('/announcements', [AnnouncementController::class, 'index']);
         Route::post('/announcements', [AnnouncementController::class, 'store']);
