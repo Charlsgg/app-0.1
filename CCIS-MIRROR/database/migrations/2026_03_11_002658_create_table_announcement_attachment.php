@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('table_announcement_attachment', function (Blueprint $table) {
             $table->integer('attachment_id')->primary();
-            $table->integer('announcement_id');
+            $table->unsignedBigInteger('announcement_id');
             $table->string('file_path');
             $table->string('file_type');
             //
