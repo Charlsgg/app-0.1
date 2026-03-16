@@ -30,7 +30,7 @@ class AnnouncementBoardController extends Controller
                     'id'            => $first->announcement_id,
                     'title'         => $first->title,
                     'content'       => $first->content,
-                    'topic'         => $first->topic ?? 'General',
+                    'topic'         => $first->topic,
                     'author_name'   => $first->author_name,
                     'author_type'   => $first->author_type,
                     'author_avatar' => $first->author_avatar ?? null,

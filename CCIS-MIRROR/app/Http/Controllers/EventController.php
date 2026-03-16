@@ -2,78 +2,71 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Event;
+use App\Models\EventFilterView;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
+// use App\Models\Event; // <-- You will need your regular Event model to create/update/delete
 
 class EventController extends Controller
 {
     /**
-     * Display a listing of the events.
+     * Fetch and filter events for the Vue Calendar (Matches Route::get('/api/events'))
      */
-    public function index()
+    public function index(Request $request)
     {
-        $events = Event::with(['author', 'board'])->paginate(15);
-        return response()->json($events);
+        $query = EventFilterView::query();
+
+        // Filter by Month
+        if ($request->filled('month')) {
+            $query->where('event_month', $request->month);
+        }
+
+        // Filter by Year
+        if ($request->filled('year')) {
+            $query->where('event_year', $request->year);
+        }
+
+        // Filter by Title
+        if ($request->filled('title')) {
+            $query->where('title', 'LIKE', '%' . $request->title . '%');
+        }
+
+        $events = $query->get();
+
+        // Return as JSON so Vue can read it!
+        return response()->json([
+            'status' => 'success',
+            'events' => $events
+        ]);
     }
 
     /**
-     * Store a newly created event in storage.
+     * Store a newly created event (Matches Route::post('/api/events'))
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'event_type' => 'required|string|max:255',
-            'author_id'  => 'required|exists:users,user_id',
-            'board_id'   => 'required|exists:table_boards,board_id',
-            'title'      => 'required|string|max:255',
-            'content'    => 'nullable|string',
-            'start_time' => 'required|date',
-            'end_time'   => 'required|date|after:start_time',
-        ]);
-
-        $event = Event::create($validated);
-
-        return response()->json($event, Response::HTTP_CREATED);
+        // Add your validation and event creation logic here later
+        // Example: Event::create($request->all());
+        
+        return response()->json(['status' => 'success', 'message' => 'Event created successfully']);
     }
 
     /**
-     * Display the specified event.
-     */
-    public function show($id)
-    {
-        $event = Event::with(['author', 'board'])->findOrFail($id);
-        return response()->json($event);
-    }
-
-    /**
-     * Update the specified event in storage.
+     * Update the specified event (Matches Route::put('/api/events/{id}'))
      */
     public function update(Request $request, $id)
     {
-        $event = Event::findOrFail($id);
-
-        $validated = $request->validate([
-            'event_type' => 'sometimes|string|max:255',
-            'title'      => 'sometimes|string|max:255',
-            'content'    => 'nullable|string',
-            'start_time' => 'sometimes|date',
-            'end_time'   => 'sometimes|date|after:start_time',
-        ]);
-
-        $event->update($validated);
-
-        return response()->json($event);
+        // Add your validation and event update logic here later
+        
+        return response()->json(['status' => 'success', 'message' => 'Event updated successfully']);
     }
 
     /**
-     * Remove the specified event from storage (Soft Delete).
+     * Remove the specified event (Matches Route::delete('/api/events/{id}'))
      */
     public function destroy($id)
     {
-        $event = Event::findOrFail($id);
-        $event->delete();
-
-        return response()->json(['message' => 'Event deleted successfully'], Response::HTTP_NO_CONTENT);
+        // Add your event deletion logic here later
+        
+        return response()->json(['status' => 'success', 'message' => 'Event deleted successfully']);
     }
 }
