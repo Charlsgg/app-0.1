@@ -16,14 +16,11 @@ return new class extends Migration
             $table->unsignedBigInteger('board_id');
             $table->string('title');
             $table->text('content');
-            $table->string('event_type');
-            
+            $table->string('venue', 255);
             $table->dateTime('start_time');
             $table->dateTime('end_time');
-            //
             $table->timestamps(); 
             $table->softDeletes(); 
-            //
             $table->foreign('user_id')
                 ->references('user_id')
                 ->on('table_users')

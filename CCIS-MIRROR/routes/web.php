@@ -31,7 +31,7 @@ Route::get('/reset-password/{token}', function (string $token) {
 })->middleware('guest')->name('password.reset');
 
 Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.update');
-// -----------------------------
+
 
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
@@ -136,7 +136,7 @@ Route::middleware('auth')->group(function () {
     Route::prefix('api')->group(function () {
         Route::get('/my-announcements', [UserAnnouncementController::class, 'index']);
         Route::get('/board-data', [AnnouncementBoardController::class, 'index']);
-
+        
         Route::get('/announcements', [AnnouncementController::class, 'index']);
         Route::post('/announcements', [AnnouncementController::class, 'store']);
         Route::put('/announcements/{id}', [AnnouncementController::class, 'update']);

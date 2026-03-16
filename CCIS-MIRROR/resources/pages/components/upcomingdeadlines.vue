@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { Calendar as CalendarIcon } from 'lucide-vue-next'
 import { useTheme } from '../composable/usetheme.ts'
-import { computed } from 'vue'
-
+import { computed, watch } from 'vue'
 
 interface Event {
     id: number | string
@@ -16,15 +15,23 @@ const props = defineProps<{
     user?: { name: string; email: string; user_type: string },
     events: Event[]
 }>()
-const eventsLink = computed(() => {
-    // Accessing 'props' variable defined above
-    const role = props.user?.user_type || 'is_instructor'
-    const prefix = role.split('_')[0] 
-    return `/${prefix}/events-page`
-})
 
+// Destructure theme and setUserType to connect the prop data
+const { styles, surface, theme, setUserType } = useTheme()
 
-const { styles, surface, isDark } = useTheme()
+// Sync the global theme state with this component's user prop 
+watch(
+    () => props.user?.user_type,
+    (newType) => {
+        if (newType) {
+            setUserType(newType)
+        }
+    },
+    { immediate: true } // Run immediately on mount
+)
+
+// Simplify the link by utilizing the pre-mapped path from useTheme
+const eventsLink = computed(() => theme.value.eventsPath)
 </script>
 
 <template>
@@ -44,11 +51,7 @@ const { styles, surface, isDark } = useTheme()
             <div v-for="event in events" :key="event.id" class="flex gap-4 items-center">
                 <div 
                     class="size-11 rounded-lg flex flex-col items-center justify-center shrink-0 border" 
-                    :style="{ 
-                        backgroundColor: isDark ? 'rgba(59, 130, 246, 0.1)' : '#eff6ff', 
-                        borderColor: isDark ? 'rgba(59, 130, 246, 0.2)' : '#dbeafe',
-                        color: '#3b82f6' 
-                    }"
+                    :style="styles.cardIcon"
                 >
                     <span class="text-[10px] font-black uppercase leading-none">{{ event.month }}</span>
                     <span class="text-base font-bold">{{ event.day }}</span>

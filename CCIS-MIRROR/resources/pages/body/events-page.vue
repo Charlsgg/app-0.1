@@ -3,10 +3,30 @@ export default { layout: null }
 </script>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useTheme } from '../composable/usetheme.ts'
 import AppSidebar from '../components/appsidebar.vue'
 import AppNavbar from '../components/appnavbar.vue'
+import EventCreateModal from '../modals/eventcreatemodal.vue'
+import MonthYearSelector from '../components/monthyearselector.vue'
+import SearchBar from '../components/searchbar.vue'
+import UpcomingEvents from '../components/upcomingevents.vue'
+import CalendarGrid from '../components/calendargrid.vue'
+interface CalendarEvent {
+    id: string | number
+    title: string
+    color?: string
+    venue?: string
+    description?: string
+    start_time?: string // Added to read from DB
+}
+
+interface CalendarDay {
+    date: number
+    isCurrentMonth: boolean
+    events: CalendarEvent[]
+    isHighlight?: boolean
+}
 
 const props = defineProps<{
     user?: { name: string; email: string; user_type: string }
@@ -17,9 +37,121 @@ const { theme, styles, surface, isDark, setUserType, initTheme } = useTheme()
 const isSidebarOpen = ref(false)
 const csrfToken = ref('')
 
+// Calendar State
+const today = new Date()
+const currentMonth = ref(today.getMonth()) // 0-11
+const currentYear = ref(today.getFullYear())
+
+// NEW: Store events fetched from the database
+const dbEvents = ref<DatabaseEvent[]>([])
+const isLoading = ref(false)
+
 // Modal state managers
 const showCreateModal = ref(false)
 const showEventDetailModal = ref(false)
+const selectedDay = ref<CalendarDay | null>(null)
+
+// NEW: Function to fetch events from Laravel
+const fetchEvents = async () => {
+    isLoading.value = true
+    try {
+        // We add +1 to month because JavaScript months are 0-11, but your DB uses 1-12
+        const queryParams = new URLSearchParams({
+            month: String(currentMonth.value + 1),
+            year: String(currentYear.value)
+        })
+
+        // Replace with your actual Laravel route
+        // Inside your fetchEvents() function:
+        const response = await fetch(`/api/events?${queryParams.toString()}`)
+        
+        if (response.ok) {
+            const data = await response.json()
+            dbEvents.value = data.events // Save the DB events to our ref
+        }
+    } catch (error) {
+        console.error('Error fetching events:', error)
+    } finally {
+        isLoading.value = false
+    }
+}
+
+// NEW: Automatically refetch events when the user changes the month or year dropdowns!
+watch([currentMonth, currentYear], () => {
+    fetchEvents()
+})
+interface DatabaseEvent {
+    event_id: number
+    user_id?: number
+    board_id?: number
+    title: string
+    content: string
+    Venue: string
+    start_time: string
+    end_time?: string
+    event_month?: number
+    event_year?: number
+}
+const calendarDays = computed(() => {
+    const days: CalendarDay[] = []
+    const firstDay = new Date(currentYear.value, currentMonth.value, 1)
+    const lastDay = new Date(currentYear.value, currentMonth.value + 1, 0)
+    
+    const startPadding = firstDay.getDay()
+    const totalDays = lastDay.getDate()
+    const prevMonthLastDay = new Date(currentYear.value, currentMonth.value, 0).getDate()
+    
+    // Previous month padding
+    for (let i = startPadding - 1; i >= 0; i--) {
+        days.push({ date: prevMonthLastDay - i, isCurrentMonth: false, events: [] })
+    }
+    
+    // Current month days
+    for (let i = 1; i <= totalDays; i++) {
+        // NEW: Filter the database events to find ones that match this specific day
+        const dayEvents = dbEvents.value.filter(event => {
+            if (!event.start_time) return false;
+            const eventDate = new Date(event.start_time);
+            
+            // Check if the event's date matches the current calendar square
+            return eventDate.getDate() === i &&
+                   eventDate.getMonth() === currentMonth.value &&
+                   eventDate.getFullYear() === currentYear.value;
+        }).map(event => {
+           
+            return {
+                id: event.event_id, 
+                title: event.title,
+                venue: event.Venue,    
+                description: event.content,
+                start_time: event.start_time,
+                color: theme.value.accent
+                
+                
+            }
+        });
+
+        days.push({
+            date: i,
+            isCurrentMonth: true,
+            events: dayEvents,
+            isHighlight: dayEvents.length > 0 // Highlight the day if it has events
+        })
+    }
+    
+    // Next month padding
+    let nextMonthDay = 1
+    while (days.length < 42) {
+        days.push({ date: nextMonthDay++, isCurrentMonth: false, events: [] })
+    }
+    
+    return days
+})
+
+const openEventDetail = (day: CalendarDay) => {
+    selectedDay.value = day
+    showEventDetailModal.value = true
+}
 
 onMounted(() => {
     initTheme()
@@ -27,15 +159,14 @@ onMounted(() => {
         setUserType(props.user.user_type)
     }
     
-    // Grab CSRF token for the logout form in the sidebar
     const tokenTag = document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement
     if (tokenTag) {
         csrfToken.value = tokenTag.content
     }
-})
 
-// Helper array for days of the week
-const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+    // NEW: Fetch events immediately when the page loads
+    fetchEvents()
+})
 </script>
 
 <template>
@@ -76,43 +207,13 @@ const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
                         </div>
 
                         <div class="flex flex-wrap items-center gap-3">
-                            <div 
-                                class="flex items-center gap-2 p-1 rounded-xl border"
-                                :style="{ backgroundColor: surface.hoverBg, borderColor: surface.borderMedium }"
-                            >
-                                <select 
-                                    class="bg-transparent border-none outline-none focus:ring-0 text-sm font-bold cursor-pointer py-1.5 pl-3 pr-8 appearance-none"
-                                    :style="{ color: theme.accent }"
-                                >
-                                    <option value="0" selected>Month</option>
-                                    <option value="1">January</option>
-                                    <option value="10">October</option>
-                                </select>
-                                <div class="w-px h-4" :style="{ backgroundColor: surface.borderStrong }"></div>
-                                <select 
-                                    class="bg-transparent border-none outline-none focus:ring-0 text-sm font-bold cursor-pointer py-1.5 pl-3 pr-8 appearance-none"
-                                    :style="{ color: theme.accent }"
-                                >
-                                    <option selected>Year</option>
-                                    <option>2023</option>
-                                    <option>2024</option>
-                                </select>
-                            </div>
-
-                            <div class="relative group">
-                                <div 
-                                    class="flex items-center rounded-lg px-3 py-1.5 transition-shadow"
-                                    :style="{ backgroundColor: surface.hoverBg }"
-                                >
-                                    <span class="material-symbols-outlined text-sm opacity-60">search</span>
-                                    <input 
-                                        class="bg-transparent border-none focus:ring-0 text-sm w-full md:w-48 font-display outline-none ml-2" 
-                                        placeholder="Search events..." 
-                                        type="text"
-                                        :style="{ color: surface.textPrimary }"
-                                    />
-                                </div>
-                            </div>
+                            <MonthYearSelector 
+                                :theme="theme" 
+                                :surface="surface" 
+                                v-model:month="currentMonth"
+                                v-model:year="currentYear"
+                            />
+                            <SearchBar :surface="surface" />
 
                             <button 
                                 @click="showCreateModal = true" 
@@ -128,176 +229,20 @@ const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
                     </div>
 
                     <div class="flex flex-col xl:flex-row gap-6 items-start">
-                        
-                        <section 
-                            class="flex-1 w-full rounded-2xl overflow-hidden shadow-lg shadow-black/5" 
-                            :style="styles.cardBg"
-                        >
-                            <div class="grid grid-cols-7 gap-px" :style="{ backgroundColor: surface.borderSubtle }">
-                                <div 
-                                    v-for="day in daysOfWeek" 
-                                    :key="day" 
-                                    class="p-4 text-center font-bold text-xs uppercase tracking-wider"
-                                    :style="{ backgroundColor: surface.hoverBg, color: theme.accent }"
-                                >
-                                    {{ day }}
-                                </div>
+                        <CalendarGrid 
+                            :theme="theme" 
+                            :surface="surface" 
+                            :styles="styles"
+                            :days="calendarDays"
+                            @show-detail="openEventDetail"
+                        />
 
-                                <div 
-                                    v-for="d in [24,25,26,27,28,29,30]" 
-                                    :key="'prev-'+d" 
-                                    class="min-h-30 p-2 opacity-40 transition-colors" 
-                                    :style="{ backgroundColor: surface.cardBg, color: surface.textMuted }"
-                                >
-                                    {{ d }}
-                                </div>
-
-                                <div 
-                                    v-for="d in [1,2]" 
-                                    :key="'d-'+d" 
-                                    @click="showEventDetailModal = true" 
-                                    class="min-h-30 p-2 cursor-pointer transition-colors" 
-                                    :style="{ backgroundColor: surface.cardBg }"
-                                    @mouseenter="(e: MouseEvent) => (e.currentTarget as HTMLElement).style.backgroundColor = surface.hoverBg"
-                                    @mouseleave="(e: MouseEvent) => (e.currentTarget as HTMLElement).style.backgroundColor = surface.cardBg"
-                                >
-                                    {{ d }}
-                                </div>
-
-                                <div 
-                                    class="min-h-30 p-2 cursor-pointer transition-colors border-t-2" 
-                                    :style="{ backgroundColor: surface.cardBg, borderTopColor: theme.accent }" 
-                                    @click="showEventDetailModal = true"
-                                    @mouseenter="(e: MouseEvent) => (e.currentTarget as HTMLElement).style.backgroundColor = surface.hoverBg"
-                                    @mouseleave="(e: MouseEvent) => (e.currentTarget as HTMLElement).style.backgroundColor = surface.cardBg"
-                                >
-                                    <span class="font-bold">3</span>
-                                    <div 
-                                        class="mt-2 p-1.5 text-[10px] rounded leading-tight font-semibold border-l-2"
-                                        :style="{ backgroundColor: theme.accent + '20', color: theme.accent, borderLeftColor: theme.accent }"
-                                    >
-                                        Midterm Exam Week
-                                    </div>
-                                </div>
-
-                                <div 
-                                    class="min-h-30 p-2 cursor-pointer transition-colors border-t-2" 
-                                    :style="{ backgroundColor: surface.cardBg, borderTopColor: theme.accent }" 
-                                    @click="showEventDetailModal = true"
-                                    @mouseenter="(e: MouseEvent) => (e.currentTarget as HTMLElement).style.backgroundColor = surface.hoverBg"
-                                    @mouseleave="(e: MouseEvent) => (e.currentTarget as HTMLElement).style.backgroundColor = surface.cardBg"
-                                >
-                                    <span class="font-bold">4</span>
-                                    <div 
-                                        class="mt-2 p-1.5 text-[10px] rounded leading-tight font-semibold border-l-2"
-                                        :style="{ backgroundColor: theme.accent + '20', color: theme.accent, borderLeftColor: theme.accent }"
-                                    >
-                                        Midterm Exam Week
-                                    </div>
-                                </div>
-
-                                <div 
-                                    class="min-h-30 p-2 cursor-pointer transition-colors border-t-2" 
-                                    :style="{ backgroundColor: surface.cardBg, borderTopColor: theme.accent }" 
-                                    @click="showEventDetailModal = true"
-                                    @mouseenter="(e: MouseEvent) => (e.currentTarget as HTMLElement).style.backgroundColor = surface.hoverBg"
-                                    @mouseleave="(e: MouseEvent) => (e.currentTarget as HTMLElement).style.backgroundColor = surface.cardBg"
-                                >
-                                    <span class="font-bold">5</span>
-                                    <div 
-                                        class="mt-2 p-1.5 text-[10px] rounded leading-tight font-semibold border-l-2 mb-1"
-                                        :style="{ backgroundColor: theme.accent + '20', color: theme.accent, borderLeftColor: theme.accent }"
-                                    >
-                                        Midterm Exam Week
-                                    </div>
-                                    <div class="p-1.5 bg-blue-500/20 text-blue-500 text-[10px] rounded leading-tight font-semibold border-l-2 border-blue-500">
-                                        Research Colloquium
-                                    </div>
-                                </div>
-
-                                <div 
-                                    v-for="d in [6,7,8,9]" 
-                                    :key="'d-'+d" 
-                                    @click="showEventDetailModal = true" 
-                                    class="min-h-30 p-2 cursor-pointer transition-colors" 
-                                    :style="{ backgroundColor: surface.cardBg }"
-                                    @mouseenter="(e: MouseEvent) => (e.currentTarget as HTMLElement).style.backgroundColor = surface.hoverBg"
-                                    @mouseleave="(e: MouseEvent) => (e.currentTarget as HTMLElement).style.backgroundColor = surface.cardBg"
-                                >
-                                    {{ d }}
-                                </div>
-
-                                <div 
-                                    class="min-h-30 p-2 cursor-pointer transition-colors border-t-2" 
-                                    :style="{ backgroundColor: surface.cardBg, borderTopColor: theme.accent }" 
-                                    @click="showEventDetailModal = true"
-                                    @mouseenter="(e: MouseEvent) => (e.currentTarget as HTMLElement).style.backgroundColor = surface.hoverBg"
-                                    @mouseleave="(e: MouseEvent) => (e.currentTarget as HTMLElement).style.backgroundColor = surface.cardBg"
-                                >
-                                    <span class="font-bold">10</span>
-                                    <div 
-                                        class="mt-2 p-1.5 text-[10px] rounded leading-tight font-semibold border-l-2"
-                                        :style="{ backgroundColor: theme.accent + '20', color: theme.accent, borderLeftColor: theme.accent }"
-                                    >
-                                        Tech Summit 2023
-                                    </div>
-                                </div>
-
-                                <div 
-                                    v-for="d in 21" 
-                                    :key="'fill-'+d" 
-                                    @click="showEventDetailModal = true" 
-                                    class="min-h-30 p-2 cursor-pointer transition-colors" 
-                                    :style="{ backgroundColor: surface.cardBg }"
-                                    @mouseenter="(e: MouseEvent) => (e.currentTarget as HTMLElement).style.backgroundColor = surface.hoverBg"
-                                    @mouseleave="(e: MouseEvent) => (e.currentTarget as HTMLElement).style.backgroundColor = surface.cardBg"
-                                >
-                                    {{ d + 10 }}
-                                </div>
-                            </div>
-                        </section>
-
-                        <aside 
-                            class="w-full xl:w-80 shrink-0 rounded-2xl overflow-hidden shadow-lg shadow-black/5 flex flex-col" 
-                            :style="styles.cardBg"
-                        >
-                            <div class="p-6 border-b" :style="{ borderColor: surface.borderSubtle, backgroundColor: surface.hoverBg }">
-                                <h3 class="text-lg font-bold" :style="styles.textPrimary">Upcoming Events</h3>
-                                <p class="text-xs" :style="styles.textMuted">Chronological feed of announcements</p>
-                            </div>
-                            
-                            <div class="p-4 space-y-4">
-                                <div 
-                                    v-for="event in [
-                                        { dates: 'Oct 10-12', posted: 'Oct 1', title: 'Tech Summit 2023: Innovations in AI', loc: 'Grand Auditorium', desc: 'Three-day event featuring keynote speakers from industry leaders.' },
-                                        { dates: 'Oct 15', posted: 'Sep 28', title: 'Career Orientation Seminar', loc: 'Seminar Hall B', desc: 'A guide for graduating students on how to navigate the job market.' },
-                                        { dates: 'Oct 20', posted: 'Oct 2', title: 'Hackathon 2023 Kick-off', loc: 'IT Lab 4 & 5', desc: 'Join us for the opening ceremony of the annual 48-hour coding marathon.' }
-                                    ]"
-                                    :key="event.title"
-                                    class="p-4 rounded-xl transition-all cursor-pointer border"
-                                    :style="{ backgroundColor: surface.inputBg, borderColor: surface.borderSubtle }"
-                                    @click="showEventDetailModal = true"
-                                    @mouseenter="(e: MouseEvent) => (e.currentTarget as HTMLElement).style.borderColor = surface.borderStrong"
-                                    @mouseleave="(e: MouseEvent) => (e.currentTarget as HTMLElement).style.borderColor = surface.borderSubtle"
-                                >
-                                    <div class="flex justify-between items-start mb-2">
-                                        <span 
-                                            class="px-2 py-1 text-[10px] font-bold rounded uppercase"
-                                            :style="{ backgroundColor: theme.accent + '20', color: theme.accent }"
-                                        >
-                                            {{ event.dates }}
-                                        </span>
-                                        <span class="text-[10px]" :style="styles.textMuted">Posted: {{ event.posted }}</span>
-                                    </div>
-                                    <h4 class="font-bold text-sm mb-1 leading-snug" :style="styles.textPrimary">{{ event.title }}</h4>
-                                    <div class="flex items-center gap-1 text-[11px] mb-2" :style="styles.textMuted">
-                                        <span class="material-symbols-outlined text-[14px]">location_on</span>
-                                        {{ event.loc }}
-                                    </div>
-                                    <p class="text-xs line-clamp-2" :style="styles.textSecondary">{{ event.desc }}</p>
-                                </div>
-                            </div>
-                        </aside>
+                        <UpcomingEvents 
+                            :theme="theme" 
+                            :surface="surface" 
+                            :styles="styles"
+                            @show-detail="showEventDetailModal = true"
+                        />
                     </div>
 
                 </div>
@@ -305,104 +250,13 @@ const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
         </main>
 
         <Teleport to="body">
-            
-            <div 
-                v-if="showCreateModal" 
-                class="fixed inset-0 backdrop-blur-sm z-100 flex items-center justify-center p-4 transition-opacity"
-                :style="{ backgroundColor: surface.overlayBg }"
-            >
-                <div class="w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden" :style="styles.cardBg">
-                    <div class="p-6 border-b flex justify-between items-center" :style="{ borderColor: surface.borderSubtle, backgroundColor: surface.hoverBg }">
-                        <h3 class="text-xl font-bold" :style="styles.textPrimary">Post New Event</h3>
-                        <button 
-                            @click="showCreateModal = false" 
-                            class="size-8 rounded-full flex items-center justify-center transition-colors" 
-                            :style="styles.textSecondary"
-                            @mouseenter="(e: MouseEvent) => (e.currentTarget as HTMLElement).style.backgroundColor = surface.borderSubtle"
-                            @mouseleave="(e: MouseEvent) => (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent'"
-                        >
-                            <span class="material-symbols-outlined">close</span>
-                        </button>
-                    </div>
-                    
-                    <div class="p-6 space-y-4" :style="styles.textPrimary">
-                        <div class="space-y-1">
-                            <label class="text-xs font-bold uppercase" :style="{ color: theme.accent }">Event Title</label>
-                            <input 
-                                class="w-full rounded-lg font-display outline-none p-2 border" 
-                                placeholder="e.g., Computer Science Night" type="text"
-                                :style="{ backgroundColor: surface.inputBg, borderColor: surface.inputBorder, color: surface.textPrimary }"
-                            />
-                        </div>
-                        <div class="grid grid-cols-3 gap-4">
-                            <div class="space-y-1">
-                                <label class="text-xs font-bold uppercase" :style="{ color: theme.accent }">Month</label>
-                                <select 
-                                    class="w-full rounded-lg font-display outline-none p-2 border appearance-none"
-                                    :style="{ backgroundColor: surface.inputBg, borderColor: surface.inputBorder, color: surface.textPrimary }"
-                                >
-                                    <option>January</option>
-                                    <option selected>October</option>
-                                </select>
-                            </div>
-                            <div class="space-y-1 col-span-2">
-                                <label class="text-xs font-bold uppercase" :style="{ color: theme.accent }">Day Range</label>
-                                <input 
-                                    class="w-full rounded-lg font-display outline-none p-2 border" 
-                                    placeholder="e.g., 3-10 or 15" type="text"
-                                    :style="{ backgroundColor: surface.inputBg, borderColor: surface.inputBorder, color: surface.textPrimary }"
-                                />
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="space-y-1">
-                                <label class="text-xs font-bold uppercase" :style="{ color: theme.accent }">Year</label>
-                                <input 
-                                    class="w-full rounded-lg font-display outline-none p-2 border" 
-                                    type="number" value="2023"
-                                    :style="{ backgroundColor: surface.inputBg, borderColor: surface.inputBorder, color: surface.textPrimary }"
-                                />
-                            </div>
-                            <div class="space-y-1">
-                                <label class="text-xs font-bold uppercase" :style="{ color: theme.accent }">Venue</label>
-                                <input 
-                                    class="w-full rounded-lg font-display outline-none p-2 border" 
-                                    placeholder="Room or Hall" type="text"
-                                    :style="{ backgroundColor: surface.inputBg, borderColor: surface.inputBorder, color: surface.textPrimary }"
-                                />
-                            </div>
-                        </div>
-                        <div class="space-y-1">
-                            <label class="text-xs font-bold uppercase" :style="{ color: theme.accent }">Brief Description</label>
-                            <textarea 
-                                class="w-full rounded-lg font-display outline-none p-3 border resize-none" 
-                                placeholder="Describe the event..." rows="3"
-                                :style="{ backgroundColor: surface.inputBg, borderColor: surface.inputBorder, color: surface.textPrimary }"
-                            ></textarea>
-                        </div>
-                    </div>
-                    
-                    <div class="p-6 flex gap-3 justify-end border-t" :style="{ borderColor: surface.borderSubtle, backgroundColor: surface.hoverBg }">
-                        <button 
-                            @click="showCreateModal = false" 
-                            class="px-6 py-2 rounded-lg font-semibold text-sm transition-colors border" 
-                            :style="{ borderColor: surface.borderSubtle, color: surface.textPrimary }"
-                            @mouseenter="(e: MouseEvent) => (e.currentTarget as HTMLElement).style.backgroundColor = surface.borderSubtle"
-                            @mouseleave="(e: MouseEvent) => (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent'"
-                        >
-                            Cancel
-                        </button>
-                        <button 
-                            class="px-6 py-2 rounded-lg font-semibold text-sm transition-opacity"
-                            :style="styles.button"
-                            @mouseenter="(e: MouseEvent) => (e.currentTarget as HTMLElement).style.opacity = '0.9'"
-                            @mouseleave="(e: MouseEvent) => (e.currentTarget as HTMLElement).style.opacity = '1'"
-                        >
-                            Publish Event
-                        </button>
-                    </div>
-                </div>
-            </div>
+            <EventCreateModal 
+                :show="showCreateModal"
+                :theme="theme"
+                :surface="surface"
+                :styles="styles"
+                @close="showCreateModal = false"
+            />
 
             <div 
                 v-if="showEventDetailModal" 
@@ -421,8 +275,13 @@ const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
                     </div>
                     <div class="p-8 -mt-10">
                         <div class="p-6 rounded-xl shadow-xl border" :style="{ backgroundColor: surface.cardBg, borderColor: surface.borderSubtle }">
-                            <div class="font-bold text-sm mb-1" :style="{ color: theme.accent }">October 3-10, 2023</div>
-                            <h3 class="text-2xl font-bold mb-4" :style="styles.textPrimary">Midterm Exam Week</h3>
+                            
+                            <div class="font-bold text-sm mb-1" :style="{ color: theme.accent }">
+                                {{ selectedDay ? `${currentMonth + 1}/${selectedDay.date}/${currentYear}` : 'Event Details' }}
+                            </div>
+                            <h3 class="text-2xl font-bold mb-4" :style="styles.textPrimary">
+                                {{ selectedDay?.events?.[0]?.title || 'Selected Event' }}
+                            </h3>
                             
                             <div class="space-y-4">
                                 <div class="flex items-start gap-3">
@@ -463,9 +322,7 @@ const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
                     </div>
                 </div>
             </div>
-            
         </Teleport>
-
     </div>
 </template>
 
