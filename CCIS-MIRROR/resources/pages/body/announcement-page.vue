@@ -7,7 +7,7 @@ import { ref, shallowRef, onMounted } from 'vue'
 import { Megaphone } from 'lucide-vue-next'
 import { useTheme } from '../composable/usetheme.ts'
 
-// Components
+
 import AppSidebar from '../components/appsidebar.vue'
 import AppNavbar from '../components/appnavbar.vue'
 import GeneralAnnouncements from '../components/generalannouncements.vue'
@@ -20,11 +20,17 @@ const props = defineProps<{
 
 const { styles, surface, isDark, setUserType, initTheme } = useTheme()
 
-// --- State ---
+const activeTopic = ref<string | null>(null)
 const isSidebarOpen = ref(false)
 const announcements = ref<any[]>([])
 const upcomingEvents = ref([])
-const stats = ref({ cs: 0, it: 0, is: 0, lsg: 0 })
+const stats = ref({ 
+    cs: 0, 
+    it: 0, 
+    is: 0, 
+    lsg: 0,
+    all: 0 
+})
 const csrfToken = ref('')
 const isLoading = ref(true)
 
@@ -40,25 +46,35 @@ onMounted(() => {
         csrfToken.value = tokenTag.content
     }
 })
-const fetchBoardData = async () => {
+const fetchBoardData = async (topic: string | null = null) => {
     try {
         isLoading.value = true
-        const response = await fetch('/api/board-data')
+        activeTopic.value = topic
+        
+        // Construct URL with query parameter if topic exists
+        const baseUrl = '/api/board-data'
+        const url = topic ? `${baseUrl}?topic=${topic}` : baseUrl
+        
+        const response = await fetch(url)
         
         if (response.ok) {
             const data = await response.json()
             
-            // Backend already handled the grouping!
-            // data.announcements is already an array of objects with nested attachments.
             announcements.value = data.announcements
             upcomingEvents.value = data.upcoming_events
-            stats.value = data.stats
+            // Stats are usually global, but the backend now returns them correctly
+            stats.value = data.stats 
         }
     } catch (error) {
         console.error('Error fetching board data:', error)
     } finally {
         isLoading.value = false
     }
+}
+
+// Function to handle the emit from the filter component
+const handleFilterChange = (role: string | null) => {
+    fetchBoardData(role)
 }
 </script>
 
@@ -94,15 +110,17 @@ const fetchBoardData = async () => {
                         :is-loading="isLoading"
                     />
 
-                    <aside class="w-full xl:w-80 shrink-0 flex flex-col gap-6 sticky top-0">
-                        <UpcomingDeadlines 
-                            :events="upcomingEvents"
-                            :is-dark="isDark"
-                        />
-                        <AnnouncementFilters 
-                            :stats="stats"
-                        />
-                    </aside>
+                   <aside class="w-full xl:w-80 shrink-0 flex flex-col gap-6 sticky top-0">
+        <UpcomingDeadlines 
+            :events="upcomingEvents"
+            :is-dark="isDark"
+        />
+        
+        <AnnouncementFilters 
+            :stats="stats"
+            @filter-change="handleFilterChange"
+        />
+    </aside>
 
                 </div>
             </div>

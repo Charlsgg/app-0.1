@@ -13,12 +13,15 @@ class Event extends Model
     public $incrementing = true; 
 
     protected $fillable = [
-        'event_type', 'author_id', 'board_id', 'title', 'content', 'start_time', 'end_time',
-    ];
-
+    'event_id',
+    'user_id', // Make sure this is here!
+    'title',
+    'description',
+    'event_date',
+];
     public function author(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'author_id', 'user_id');
+        return $this->belongsTo(User::class, 'user_id', 'user_id');
     }
 
     public function board(): BelongsTo

@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { Calendar as CalendarIcon } from 'lucide-vue-next'
 import { useTheme } from '../composable/usetheme.ts'
+import { computed } from 'vue'
+
 
 interface Event {
     id: number | string
@@ -10,9 +12,17 @@ interface Event {
     time: string
 }
 
-defineProps<{
+const props = defineProps<{
+    user?: { name: string; email: string; user_type: string },
     events: Event[]
 }>()
+const eventsLink = computed(() => {
+    // Accessing 'props' variable defined above
+    const role = props.user?.user_type || 'is_instructor'
+    const prefix = role.split('_')[0] 
+    return `/${prefix}/events-page`
+})
+
 
 const { styles, surface, isDark } = useTheme()
 </script>
@@ -51,9 +61,9 @@ const { styles, surface, isDark } = useTheme()
             </div>
         </div>
         
-        <a href="/events-page" 
-           class="w-full mt-6 py-2.5 text-xs font-bold transition-all border rounded-lg hover:opacity-80 text-center block"
-           :style="{ borderColor: surface.borderSubtle, color: surface.textSecondary, backgroundColor: surface.inputBg }"
+        <a :href="eventsLink" 
+          class="w-full mt-6 py-2.5 text-xs font-bold transition-all border rounded-lg hover:opacity-80 text-center block"
+          :style="{ borderColor: surface.borderSubtle, color: surface.textSecondary, backgroundColor: surface.inputBg }"
         >
             View Full Calendar
         </a>

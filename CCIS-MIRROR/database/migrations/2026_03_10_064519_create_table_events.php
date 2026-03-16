@@ -12,18 +12,19 @@ return new class extends Migration
     Schema::create('table_events', function (Blueprint $table) {
 
             $table->id('event_id'); 
-            $table->unsignedBigInteger('author_id');
+            $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('board_id');
             $table->string('title');
             $table->text('content');
             $table->string('event_type');
+            
             $table->dateTime('start_time');
             $table->dateTime('end_time');
             //
             $table->timestamps(); 
             $table->softDeletes(); 
             //
-            $table->foreign('author_id')
+            $table->foreign('user_id')
                 ->references('user_id')
                 ->on('table_users')
                 ->onDelete('cascade');
