@@ -1,244 +1,199 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
+
+interface CalendarEvent {
+    title: string
+    venue: string
+    description: string
+    start_time: string
+    end_time?: string // Added end_time
+}
 
 const props = defineProps<{
     show: boolean
-    event: any
     theme: Record<string, any>
     surface: Record<string, any>
     styles: Record<string, any>
+    events: CalendarEvent[] 
 }>()
 
 const emit = defineEmits<{
     (e: 'close'): void
-    (e: 'updated'): void // Tell parent to refresh
-    (e: 'deleted'): void // Tell parent to refresh
 }>()
 
-const isEditing = ref(false)
-const isLoading = ref(false)
-const errorMessage = ref('')
+const selectedIndex = ref(0)
 
-// Editable form state
-const form = ref({
-    title: '',
-    venue: '',
-    description: ''
+watch(() => props.show, (newVal) => {
+    if (newVal) {
+        selectedIndex.value = 0
+    }
 })
 
-// Populate form when modal opens or event changes
-watch(() => props.event, (newEvent) => {
-    if (newEvent) {
-        form.value = {
-            title: newEvent.title || '',
-            venue: newEvent.venue || '',
-            description: newEvent.description || ''
-        }
+const activeEvent = computed(() => {
+    if (!props.events || props.events.length === 0) return null
+    return props.events[selectedIndex.value]
+})
+
+const formattedDate = computed(() => {
+    if (!activeEvent.value?.start_time) return 'Event Details'
+    const date = new Date(activeEvent.value.start_time)
+    return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }).toUpperCase()
+})
+
+// Helper to format start and end times cleanly
+const formatTimeRange = (start?: string, end?: string) => {
+    if (!start) return 'TBA'
+    
+    const startDate = new Date(start)
+    const startTimeStr = startDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+
+    if (!end) return startTimeStr
+
+    const endDate = new Date(end)
+    const endTimeStr = endDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+
+    // If the event ends on a different day, append the end date so it's clear
+    if (startDate.toDateString() !== endDate.toDateString()) {
+        const endDateStr = endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+        return `${startTimeStr} - ${endDateStr}, ${endTimeStr}`
     }
-}, { immediate: true })
 
-const close = () => {
-    isEditing.value = false
-    errorMessage.value = ''
-    emit('close')
-}
-
-// UPDATE (Edit) Logic
-const submitUpdate = async () => {
-    if (!props.event?.id) return
-
-    isLoading.value = true
-    errorMessage.value = ''
-
-    try {
-        const tokenTag = document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement
-        const csrfToken = tokenTag ? tokenTag.content : ''
-
-        // Prepare payload matching Laravel validation
-        const payload = {
-            title: form.value.title,
-            Venue: form.value.venue,
-            content: form.value.description
-        }
-
-        const response = await fetch(`/api/events/${props.event.id}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRF-TOKEN': csrfToken
-            },
-            body: JSON.stringify(payload)
-        })
-
-        if (!response.ok) throw new Error('Failed to update event.')
-
-        emit('updated')
-        isEditing.value = false // Return to view mode
-    } catch (error: any) {
-        errorMessage.value = error.message || 'Error updating event.'
-    } finally {
-        isLoading.value = false
-    }
-}
-
-// DELETE Logic
-const confirmDelete = async () => {
-    if (!props.event?.id) return
-    if (!confirm('Are you sure you want to delete this event?')) return
-
-    isLoading.value = true
-    errorMessage.value = ''
-
-    try {
-        const tokenTag = document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement
-        const csrfToken = tokenTag ? tokenTag.content : ''
-
-        const response = await fetch(`/api/events/${props.event.id}`, {
-            method: 'DELETE',
-            headers: {
-                'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRF-TOKEN': csrfToken
-            }
-        })
-
-        if (!response.ok) throw new Error('Failed to delete event.')
-
-        emit('deleted')
-        close() // Close the modal entirely
-    } catch (error: any) {
-        errorMessage.value = error.message || 'Error deleting event.'
-    } finally {
-        isLoading.value = false
-    }
-}
-
-const formatModalDate = (dateString?: string) => {
-    if (!dateString) return 'Event Details'
-    const date = new Date(dateString)
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    return `${startTimeStr} - ${endTimeStr}`
 }
 </script>
 
 <template>
-    <div 
-        v-if="show" 
-        class="fixed inset-0 backdrop-blur-sm z-101 flex items-center justify-center p-4 transition-opacity font-['Space_Grotesk']"
-        :style="{ backgroundColor: surface.overlayBg }"
-    >
-        <div class="w-full max-w-md rounded-2xl shadow-2xl overflow-hidden" :style="styles.cardBg">
-            
-            <div class="relative h-32 flex items-center justify-center transition-colors" :style="{ backgroundColor: isEditing ? surface.borderStrong : theme.accent }">
-                <span class="material-symbols-outlined text-white text-6xl opacity-30">
-                    {{ isEditing ? 'edit_square' : 'event_note' }}
-                </span>
-                <button 
-                    @click="close" 
-                    class="absolute top-4 right-4 size-8 rounded-full bg-black/20 text-white flex items-center justify-center hover:bg-black/40 transition-colors"
+    <Teleport to="body">
+        <div 
+            v-if="show" 
+            class="fixed inset-0 backdrop-blur-sm z-[101] flex items-center justify-center p-4 transition-opacity"
+            :style="{ backgroundColor: surface.overlayBg }"
+            @click.self="$emit('close')"
+        >
+            <div class="w-full max-w-4xl flex flex-col md:flex-row rounded-2xl shadow-2xl overflow-hidden min-h-[500px] max-h-[90vh]" :style="styles.cardBg">
+                
+                <div 
+                    v-if="events && events.length > 1"
+                    class="w-full md:w-[320px] shrink-0 border-b md:border-b-0 md:border-r flex flex-col"
+                    :style="{ borderColor: surface.borderSubtle, backgroundColor: surface.cardBg }"
                 >
-                    <span class="material-symbols-outlined">close</span>
-                </button>
-            </div>
-            
-            <div class="p-8 -mt-10">
-                <div class="p-6 rounded-xl shadow-xl border" :style="{ backgroundColor: surface.cardBg, borderColor: surface.borderSubtle }">
+                    <div class="p-6 border-b" :style="{ borderColor: surface.borderSubtle }">
+                        <h4 class="font-bold text-[11px] uppercase tracking-wider opacity-60" :style="styles.textPrimary">
+                            {{ events.length }} Events Scheduled
+                        </h4>
+                    </div>
                     
-                    <div v-if="errorMessage" class="mb-4 p-3 rounded-lg text-sm bg-red-500/10 text-red-500 border border-red-500/20">
-                        {{ errorMessage }}
+                    <div class="p-4 overflow-y-auto space-y-3 scrollbar-hide flex-1">
+                        <button
+                            v-for="(event, index) in events"
+                            :key="index"
+                            @click="selectedIndex = index"
+                            class="w-full text-left p-4 rounded-xl transition-all border"
+                            :style="{ 
+                                backgroundColor: selectedIndex === index ? surface.cardBg : surface.hoverBg,
+                                borderColor: selectedIndex === index ? theme.accent : 'transparent',
+                            }"
+                        >
+                            <div 
+                                class="font-bold text-[15px] leading-tight line-clamp-2 mb-1.5 transition-colors" 
+                                :style="{ color: selectedIndex === index ? styles.textPrimary.color : styles.textSecondary.color }"
+                            >
+                                {{ event.title }}
+                            </div>
+                            <div 
+                                class="text-[13px] flex items-center gap-1.5 transition-colors" 
+                                :style="{ color: selectedIndex === index ? theme.accent : styles.textMuted.color }"
+                            >
+                                <span class="material-symbols-outlined text-[16px]">schedule</span>
+                                {{ formatTimeRange(event.start_time, event.end_time) }}
+                            </div>
+                        </button>
                     </div>
+                </div>
 
-                    <div class="font-bold text-sm mb-1 uppercase tracking-wide flex justify-between items-center" :style="{ color: theme.accent }">
-                        {{ formatModalDate(event?.start_time) }}
-                        <span v-if="isEditing" class="text-[10px] bg-red-500 text-white px-2 py-0.5 rounded">EDITING</span>
-                    </div>
+                <div class="w-full md:flex-1 relative flex flex-col overflow-hidden" :style="{ backgroundColor: surface.cardBg }">
+                    
+                    <button 
+                        @click="$emit('close')" 
+                        class="absolute top-5 right-5 p-1 transition-opacity z-[110] hover:opacity-60"
+                        :style="styles.textPrimary"
+                    >
+                        <span class="material-symbols-outlined text-[24px]">close</span>
+                    </button>
 
-                    <div v-if="!isEditing">
-                        <h3 class="text-2xl font-bold mb-4" :style="styles.textPrimary">
-                            {{ event?.title || 'No Title Selected' }}
-                        </h3>
+                    <div class="w-full h-full overflow-y-auto scrollbar-hide flex flex-col">
                         
-                        <div class="space-y-4">
-                            <div class="flex items-start gap-3">
-                                <span class="material-symbols-outlined mt-0.5" :style="{ color: theme.accent }">location_on</span>
-                                <div>
-                                    <p class="text-xs font-bold uppercase" :style="styles.textMuted">Venue</p>
-                                    <p class="text-sm" :style="styles.textPrimary">{{ event?.venue || 'TBA' }}</p>
+                        <div class="relative h-16 flex items-center justify-center shrink-0" :style="{ backgroundColor: theme.accent + '08' }">
+                            <span class="material-symbols-outlined text-4xl opacity-[0.05]" :style="{ color: theme.accent }">calendar_today</span>
+                        </div>
+                        
+                        <div class="p-8 md:px-10 flex-1 bg-transparent">
+                            
+                            <div class="-mt-10 mb-4 relative z-10">
+                                <span 
+                                    class="inline-flex items-center px-3 py-1 text-[11px] font-bold rounded-md tracking-wider backdrop-blur-md" 
+                                    :style="{ backgroundColor: theme.accent + '15', color: theme.accent }"
+                                >
+                                    {{ formattedDate }}
+                                </span>
+                            </div>
+
+                            <h3 class="text-[32px] font-extrabold mb-10 leading-tight" :style="styles.textPrimary">
+                                {{ activeEvent?.title || 'No Title Selected' }}
+                            </h3>
+                            
+                            <div class="space-y-8">
+                                <div class="flex items-start gap-5">
+                                    <div class="size-11 rounded-full flex items-center justify-center shrink-0" :style="{ backgroundColor: theme.accent + '10' }">
+                                        <span class="material-symbols-outlined text-[22px]" :style="{ color: theme.accent }">schedule</span>
+                                    </div>
+                                    <div class="pt-0.5">
+                                        <p class="text-[11px] font-bold uppercase tracking-widest mb-1 opacity-50" :style="styles.textPrimary">Time</p>
+                                        <p class="text-[15px] font-medium" :style="styles.textPrimary">
+                                            {{ formatTimeRange(activeEvent?.start_time, activeEvent?.end_time) }}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-start gap-5">
+                                    <div class="size-11 rounded-full flex items-center justify-center shrink-0" :style="{ backgroundColor: theme.accent + '10' }">
+                                        <span class="material-symbols-outlined text-[22px]" :style="{ color: theme.accent }">location_on</span>
+                                    </div>
+                                    <div class="pt-0.5">
+                                        <p class="text-[11px] font-bold uppercase tracking-widest mb-1 opacity-50" :style="styles.textPrimary">Venue</p>
+                                        <p class="text-[15px] font-medium" :style="styles.textPrimary">{{ activeEvent?.venue || 'TBA' }}</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-start gap-5">
+                                    <div class="size-11 rounded-full flex items-center justify-center shrink-0" :style="{ backgroundColor: theme.accent + '10' }">
+                                        <span class="material-symbols-outlined text-[22px]" :style="{ color: theme.accent }">description</span>
+                                    </div>
+                                    <div class="pt-0.5 w-full">
+                                        <p class="text-[11px] font-bold uppercase tracking-widest mb-1 opacity-50" :style="styles.textPrimary">Details</p>
+                                        <p class="text-[15px] leading-relaxed opacity-90" :style="styles.textPrimary">
+                                            {{ activeEvent?.description || 'No additional details provided.' }}
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="flex items-start gap-3">
-                                <span class="material-symbols-outlined mt-0.5" :style="{ color: theme.accent }">description</span>
-                                <div>
-                                    <p class="text-xs font-bold uppercase" :style="styles.textMuted">Description</p>
-                                    <p class="text-sm leading-relaxed" :style="styles.textSecondary">
-                                        {{ event?.description || 'No additional details provided.' }}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="mt-8 flex gap-2">
-                            <button 
-                                @click="isEditing = true"
-                                class="flex-1 py-2.5 rounded-lg font-bold text-sm transition-opacity flex justify-center items-center gap-2"
-                                :style="{ backgroundColor: theme.accent + '20', color: theme.accent }"
-                                @mouseenter="(e: MouseEvent) => (e.currentTarget as HTMLElement).style.opacity = '0.8'"
-                                @mouseleave="(e: MouseEvent) => (e.currentTarget as HTMLElement).style.opacity = '1'"
-                            >
-                                <span class="material-symbols-outlined text-[18px]">edit</span> Edit
-                            </button>
-                            <button 
-                                @click="confirmDelete"
-                                :disabled="isLoading"
-                                class="flex-1 py-2.5 rounded-lg border text-red-500 font-bold text-sm transition-colors flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                                :style="{ borderColor: 'rgba(239, 68, 68, 0.2)' }"
-                                @mouseenter="(e: MouseEvent) => { if(!isLoading) (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(239, 68, 68, 0.1)' }"
-                                @mouseleave="(e: MouseEvent) => { if(!isLoading) (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent' }"
-                            >
-                                <span class="material-symbols-outlined text-[18px]">delete</span>
-                                {{ isLoading ? '...' : 'Delete' }}
-                            </button>
+
                         </div>
                     </div>
-
-                    <form v-else @submit.prevent="submitUpdate" class="space-y-4">
-                        <div>
-                            <label class="text-xs font-bold uppercase mb-1 block" :style="styles.textMuted">Title</label>
-                            <input v-model="form.title" required class="w-full rounded border p-2 text-sm outline-none" :style="{ backgroundColor: surface.inputBg, borderColor: surface.inputBorder, color: surface.textPrimary }">
-                        </div>
-                        <div>
-                            <label class="text-xs font-bold uppercase mb-1 block" :style="styles.textMuted">Venue</label>
-                            <input v-model="form.venue" required class="w-full rounded border p-2 text-sm outline-none" :style="{ backgroundColor: surface.inputBg, borderColor: surface.inputBorder, color: surface.textPrimary }">
-                        </div>
-                        <div>
-                            <label class="text-xs font-bold uppercase mb-1 block" :style="styles.textMuted">Description</label>
-                            <textarea v-model="form.description" required rows="3" class="w-full rounded border p-2 text-sm outline-none resize-none" :style="{ backgroundColor: surface.inputBg, borderColor: surface.inputBorder, color: surface.textPrimary }"></textarea>
-                        </div>
-                        
-                        <div class="mt-6 flex gap-2">
-                            <button 
-                                type="button"
-                                @click="isEditing = false"
-                                class="flex-1 py-2.5 rounded-lg font-bold text-sm border transition-colors"
-                                :style="{ borderColor: surface.borderSubtle, color: surface.textPrimary }"
-                            >
-                                Cancel
-                            </button>
-                            <button 
-                                type="submit"
-                                :disabled="isLoading"
-                                class="flex-1 py-2.5 rounded-lg font-bold text-sm transition-opacity flex justify-center items-center gap-2 disabled:opacity-50"
-                                :style="styles.button"
-                            >
-                                <span v-if="isLoading" class="material-symbols-outlined animate-spin text-[16px]">progress_activity</span>
-                                Save Changes
-                            </button>
-                        </div>
-                    </form>
 
                 </div>
+
             </div>
         </div>
-    </div>
+    </Teleport>
 </template>
+
+<style scoped>
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+.scrollbar-hide {
+    -ms-overflow-style: none; 
+    scrollbar-width: none; 
+}
+</style>

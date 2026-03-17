@@ -11,14 +11,13 @@ defineEmits<{
     (e: 'show-detail', eventId: number): void
 }>()
 
-// Define the shape of your Event data based on your Laravel model
+// 1. Updated Interface to match your Laravel Database columns exactly
 interface AppEvent {
-    id: number;
+    event_id: number;
     title: string;
-    description: string;
-    event_month: string;
-    event_year: string;
-    location?: string;
+    content: string; // Matches 'content' from db
+    venue: string;   // Matches 'venue' from db
+    start_time: string; // Used to display the full date
     created_at?: string;
 }
 
@@ -47,15 +46,23 @@ const fetchUpcomingEvents = async () => {
     }
 }
 
+// 2. Moved onMounted to execute AFTER the fetch function is defined
 onMounted(() => {
     fetchUpcomingEvents()
 })
 
-// Quick helper to format the 'posted' date if you have timestamps
+// Quick helper to format the 'posted' date
 const formatDate = (dateString?: string) => {
     if (!dateString) return 'Recently'
     const date = new Date(dateString)
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+}
+
+// 3. Added a helper to format the full event date
+const formatFullDate = (dateString?: string) => {
+    if (!dateString) return 'TBA'
+    const date = new Date(dateString)
+    return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
 }
 </script>
 
@@ -86,10 +93,10 @@ const formatDate = (dateString?: string) => {
             <div 
                 v-else
                 v-for="event in events"
-                :key="event.id"
+                :key="event.event_id"
                 class="p-4 rounded-xl transition-all cursor-pointer border"
                 :style="{ backgroundColor: surface.inputBg, borderColor: surface.borderSubtle }"
-                @click="$emit('show-detail', event.id)"
+                @click="$emit('show-detail', event.event_id)"
                 @mouseenter="(e: MouseEvent) => (e.currentTarget as HTMLElement).style.borderColor = surface.borderStrong"
                 @mouseleave="(e: MouseEvent) => (e.currentTarget as HTMLElement).style.borderColor = surface.borderSubtle"
             >
@@ -98,7 +105,7 @@ const formatDate = (dateString?: string) => {
                         class="px-2 py-1 text-[10px] font-bold rounded uppercase"
                         :style="{ backgroundColor: theme.accent + '20', color: theme.accent }"
                     >
-                        {{ event.event_month }} {{ event.event_year }}
+                        {{ formatFullDate(event.start_time) }}
                     </span>
                     <span class="text-[10px]" :style="styles.textMuted">
                         Posted: {{ formatDate(event.created_at) }}
@@ -111,11 +118,11 @@ const formatDate = (dateString?: string) => {
                 
                 <div class="flex items-center gap-1 text-[11px] mb-2" :style="styles.textMuted">
                     <span class="material-symbols-outlined text-[14px]">location_on</span>
-                    {{ event.location || 'TBA' }}
+                    {{ event.venue || 'TBA' }}
                 </div>
                 
                 <p class="text-xs line-clamp-2" :style="styles.textSecondary">
-                    {{ event.description || 'No description provided.' }}
+                    {{ event.content || 'No description provided.' }}
                 </p>
             </div>
             

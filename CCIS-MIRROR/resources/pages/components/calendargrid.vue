@@ -180,7 +180,7 @@ const processedDays = computed(() => {
                 <div 
                     v-for="(event, idx) in day.slottedEvents"
                     :key="event ? event.id : `empty-${day.date}-${idx}`"
-                    class="h-[44px] mt-2 mb-1 p-1.5 text-[10px] leading-tight font-semibold flex flex-col justify-center gap-0.5"
+                    class="h-11 mt-2 mb-1 p-1.5 text-[10px] leading-tight font-semibold flex flex-col justify-center gap-0.5"
                     :class="event ? getEventClasses(event, day) : 'opacity-0 pointer-events-none'"
                     :style="event ? getEventStyle(event) : {}"
                 >
