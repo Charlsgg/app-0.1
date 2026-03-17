@@ -8,25 +8,27 @@ import { useTheme } from '../composable/usetheme.ts'
 import AppSidebar from '../components/appsidebar.vue'
 import AppNavbar from '../components/appnavbar.vue'
 import EventCreateModal from '../modals/eventcreatemodal.vue'
+import EventDetailModal from '../modals/eventdetailmodal.vue' // <-- Imported here
 import MonthYearSelector from '../components/monthyearselector.vue'
 import UpcomingEvents from '../components/upcomingevents.vue'
 import CalendarGrid from '../components/calendargrid.vue'
 
+const selectedEvents = ref<Array<{title: string, venue: string, description: string, start_time: string}>>([])
 interface CalendarEvent {
     id: string | number
     title: string
     color?: string
     venue?: string
     description?: string
-    start_time?: string  // Kept for your modal logic
-    end_time?: string    // Kept for your modal logic
-    startTime?: string   // ADDED: For multi-day ribbon logic
-    endTime?: string     // ADDED: For multi-day ribbon logic
+    start_time?: string  
+    end_time?: string    
+    startTime?: string   
+    endTime?: string     
 }
 
 interface CalendarDay {
     date: number
-    fullDate?: string    // ADDED: For multi-day date comparisons
+    fullDate?: string    
     isCurrentMonth: boolean
     events: CalendarEvent[]
     isHighlight?: boolean
@@ -38,7 +40,8 @@ interface DatabaseEvent {
     board_id?: number
     title: string
     content: string
-    Venue: string
+    venue?: string 
+    Venue?: string
     start_time: string
     end_time?: string
     event_month?: number
@@ -54,21 +57,17 @@ const { theme, styles, surface, isDark, setUserType, initTheme } = useTheme()
 const isSidebarOpen = ref(false)
 const csrfToken = ref('')
 
-// Calendar State
 const today = new Date()
-const currentMonth = ref(today.getMonth()) // 0-11
+const currentMonth = ref(today.getMonth()) 
 const currentYear = ref(today.getFullYear())
 
-// Store events fetched from the database
 const dbEvents = ref<DatabaseEvent[]>([])
 const isLoading = ref(false)
 
-// Modal state managers
 const showCreateModal = ref(false)
 const showEventDetailModal = ref(false)
 const selectedDay = ref<CalendarDay | null>(null)
 
-// NEW: Unified state for the modal to display (handles both Calendar clicks and Upcoming Events clicks)
 const selectedEvent = ref<{title: string, venue: string, description: string, start_time: string} | null>(null)
 
 const fetchEvents = async () => {
@@ -95,6 +94,7 @@ const fetchEvents = async () => {
 watch([currentMonth, currentYear], () => {
     fetchEvents()
 })
+
 const calendarDays = computed(() => {
     const days: CalendarDay[] = []
     const firstDay = new Date(currentYear.value, currentMonth.value, 1)
@@ -104,7 +104,6 @@ const calendarDays = computed(() => {
     const totalDays = lastDay.getDate()
     const prevMonthLastDay = new Date(currentYear.value, currentMonth.value, 0).getDate()
     
-    // 1. Generate padding days (previous month)
     for (let i = startPadding - 1; i >= 0; i--) {
         const padDate = prevMonthLastDay - i
         const prevMonth = currentMonth.value === 0 ? 11 : currentMonth.value - 1
@@ -114,13 +113,11 @@ const calendarDays = computed(() => {
         days.push({ date: padDate, fullDate, isCurrentMonth: false, events: [] })
     }
     
-    // 2. Generate current month days
     for (let i = 1; i <= totalDays; i++) {
         const fullDate = `${currentYear.value}-${String(currentMonth.value + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`
         days.push({ date: i, fullDate, isCurrentMonth: true, events: [] })
     }
     
-    // 3. Generate padding days (next month)
     let nextMonthDay = 1
     while (days.length < 42) {
         const nextMonth = currentMonth.value === 11 ? 0 : currentMonth.value + 1
@@ -130,27 +127,24 @@ const calendarDays = computed(() => {
         days.push({ date: nextMonthDay++, fullDate, isCurrentMonth: false, events: [] })
     }
     
-    // 4. Distribute events across the generated days
     dbEvents.value.forEach(event => {
         if (!event.start_time) return
         
         const startDate = new Date(event.start_time)
-        // Default to start date if no end date exists
         const endDate = event.end_time ? new Date(event.end_time) : new Date(startDate)
         
-        // Strip the time portion to ensure strict date-to-date comparison
         startDate.setHours(0, 0, 0, 0)
         endDate.setHours(23, 59, 59, 999)
         
         const calendarEvent: CalendarEvent = {
             id: event.event_id, 
             title: event.title,
-            venue: event.Venue,    
-            description: event.content,
+            venue: event.venue || event.Venue, 
+            description: event.content,        
             start_time: event.start_time,
             end_time: event.end_time,
-            startTime: event.start_time, // Passed to grid for start boundary check
-            endTime: event.end_time,     // Passed to grid for end boundary check
+            startTime: event.start_time, 
+            endTime: event.end_time,     
             color: theme.value.accent
         }
 
@@ -158,10 +152,8 @@ const calendarDays = computed(() => {
             if (!day.fullDate) return
             
             const currentCellDate = new Date(day.fullDate)
-            // Set cell date to noon to avoid unexpected timezone shifts
             currentCellDate.setHours(12, 0, 0, 0) 
 
-            // If the cell falls within the start and end range, add the event
             if (currentCellDate >= startDate && currentCellDate <= endDate) {
                 day.events.push(calendarEvent)
                 day.isHighlight = true
@@ -172,48 +164,45 @@ const calendarDays = computed(() => {
     return days
 })
 
-// Handles clicks from the Calendar Grid
 const openEventDetail = (day: CalendarDay) => {
     selectedDay.value = day
     if (day.events && day.events.length > 0) {
-        selectedEvent.value = {
-            title: day.events[0].title,
-            venue: day.events[0].venue || 'TBA',
-            description: day.events[0].description || 'No description provided.',
-            start_time: day.events[0].start_time || ''
-        }
+        // Map the entire array of events for that day
+        selectedEvents.value = day.events.map(e => ({
+            title: e.title,
+            venue: e.venue || 'TBA',
+            description: e.description || 'No description provided.',
+            start_time: e.start_time || ''
+        }))
+        showEventDetailModal.value = true
     } else {
-        selectedEvent.value = null
+        selectedEvents.value = []
     }
-    showEventDetailModal.value = true
 }
 
-// NEW: Handles clicks from the Upcoming Events Sidebar
 const openUpcomingEventDetail = async (eventId: number) => {
-    // 1. Check if the event is already in the current month's calendar view
     const event = dbEvents.value.find(e => e.event_id === eventId)
     
     if (event) {
         selectedEvent.value = {
             title: event.title,
-            venue: event.Venue,
+            venue: event.venue || event.Venue || 'TBA',
             description: event.content,
             start_time: event.start_time
         }
         showEventDetailModal.value = true
     } else {
-        // 2. If it's next month, it won't be in dbEvents. Fetch it from the upcoming list!
         try {
             const response = await fetch('/api/events/upcoming')
             const data = await response.json()
-            const futureEvent = data.events?.find((e: any) => e.id === eventId || e.event_id === eventId)
+            const futureEvent = data.events?.find((e: any) => e.event_id === eventId || e.id === eventId)
             
             if (futureEvent) {
                 selectedEvent.value = {
                     title: futureEvent.title,
-                    venue: futureEvent.location || futureEvent.Venue || 'TBA', 
-                    description: futureEvent.description || futureEvent.content || 'No description provided.',
-                    start_time: futureEvent.start_time || futureEvent.created_at
+                    venue: futureEvent.venue || futureEvent.Venue || 'TBA', 
+                    description: futureEvent.content || 'No description provided.',
+                    start_time: futureEvent.start_time
                 }
                 showEventDetailModal.value = true
             }
@@ -221,13 +210,6 @@ const openUpcomingEventDetail = async (eventId: number) => {
             console.error("Could not load future event details", error)
         }
     }
-}
-
-// Helper to format the date nicely for the modal header
-const formatModalDate = (dateString?: string) => {
-    if (!dateString) return 'Event Details'
-    const date = new Date(dateString)
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
 onMounted(() => {
@@ -325,80 +307,22 @@ onMounted(() => {
 
         <Teleport to="body">
             <EventCreateModal 
-            :show="showCreateModal"
-            :theme="theme"
-            :surface="surface"
-            :styles="styles"
-            @close="showCreateModal = false"
-            @created="fetchEvents" />
+                :show="showCreateModal"
+                :theme="theme"
+                :surface="surface"
+                :styles="styles"
+                @close="showCreateModal = false"
+                @created="fetchEvents" 
+            />
 
-            <div 
-                v-if="showEventDetailModal" 
-                class="fixed inset-0 backdrop-blur-sm z-101 flex items-center justify-center p-4 transition-opacity"
-                :style="{ backgroundColor: surface.overlayBg }"
-            >
-                <div class="w-full max-w-md rounded-2xl shadow-2xl overflow-hidden" :style="styles.cardBg">
-                    <div class="relative h-32 flex items-center justify-center" :style="{ backgroundColor: theme.accent }">
-                        <span class="material-symbols-outlined text-white text-6xl opacity-30">event_note</span>
-                        <button 
-                            @click="showEventDetailModal = false" 
-                            class="absolute top-4 right-4 size-8 rounded-full bg-black/20 text-white flex items-center justify-center hover:bg-black/40 transition-colors"
-                        >
-                            <span class="material-symbols-outlined">close</span>
-                        </button>
-                    </div>
-                    <div class="p-8 -mt-10">
-                        <div class="p-6 rounded-xl shadow-xl border" :style="{ backgroundColor: surface.cardBg, borderColor: surface.borderSubtle }">
-                            
-                            <div class="font-bold text-sm mb-1 uppercase tracking-wide" :style="{ color: theme.accent }">
-                                {{ formatModalDate(selectedEvent?.start_time) }}
-                            </div>
-
-                            <h3 class="text-2xl font-bold mb-4" :style="styles.textPrimary">
-                                {{ selectedEvent?.title || 'No Title Selected' }}
-                            </h3>
-                            
-                            <div class="space-y-4">
-                                <div class="flex items-start gap-3">
-                                    <span class="material-symbols-outlined mt-0.5" :style="{ color: theme.accent }">location_on</span>
-                                    <div>
-                                        <p class="text-xs font-bold uppercase" :style="styles.textMuted">Venue</p>
-                                        <p class="text-sm" :style="styles.textPrimary">{{ selectedEvent?.venue || 'TBA' }}</p>
-                                    </div>
-                                </div>
-                                <div class="flex items-start gap-3">
-                                    <span class="material-symbols-outlined mt-0.5" :style="{ color: theme.accent }">description</span>
-                                    <div>
-                                        <p class="text-xs font-bold uppercase" :style="styles.textMuted">Description</p>
-                                        <p class="text-sm leading-relaxed" :style="styles.textSecondary">
-                                            {{ selectedEvent?.description || 'No additional details provided.' }}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="mt-8 flex gap-2">
-                                <button 
-                                    class="flex-1 py-2.5 rounded-lg font-bold text-sm transition-opacity"
-                                    :style="{ backgroundColor: theme.accent + '20', color: theme.accent }"
-                                    @mouseenter="(e: MouseEvent) => (e.currentTarget as HTMLElement).style.opacity = '0.8'"
-                                    @mouseleave="(e: MouseEvent) => (e.currentTarget as HTMLElement).style.opacity = '1'"
-                                >
-                                    Edit Event
-                                </button>
-                                <button 
-                                    class="flex-1 py-2.5 rounded-lg border text-red-500 font-bold text-sm transition-colors"
-                                    :style="{ borderColor: 'rgba(239, 68, 68, 0.2)' }"
-                                    @mouseenter="(e: MouseEvent) => (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(239, 68, 68, 0.1)'"
-                                    @mouseleave="(e: MouseEvent) => (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent'"
-                                >
-                                    Delete
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <EventDetailModal 
+                :show="showEventDetailModal"
+                :theme="theme"
+                :surface="surface"
+                :styles="styles"
+                :events="selectedEvents" 
+                @close="showEventDetailModal = false"
+            />
         </Teleport>
     </div>
 </template>
