@@ -40,7 +40,7 @@ const eventsLink = computed(() => theme.value.eventsPath)
         :style="{ backgroundColor: surface.cardBg, borderColor: surface.borderSubtle }"
     >
         <h3 class="font-bold mb-5 flex items-center gap-2 text-sm uppercase tracking-wider" :style="styles.textPrimary">
-            <CalendarIcon :size="16" /> Upcoming Deadlines
+            <CalendarIcon :size="16" /> Upcoming Events
         </h3>
         
         <div class="space-y-5">

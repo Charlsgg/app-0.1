@@ -9,7 +9,7 @@ use App\Models\Announcement;
 use App\Models\Notification;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
-//hjgjhghj
+
 class DatabaseSeeder extends Seeder
 {
     public function run(): void
@@ -38,42 +38,46 @@ class DatabaseSeeder extends Seeder
             ['announcement_id' => 1003, 'board_id' => 2, 'author_id' => 102, 'title' => 'Coding Competition', 'content' => 'Register now for Hackathon.', 'topic' => 'Contest', 'likes_count' => 8],
         ];
         foreach ($announcements as $a) Announcement::create($a);
-$events = [
-    [
-        'event_id' => 501, 
-        'user_id' => 101, 
-        'board_id' => 1,
-        'title' => 'IT Faculty Meeting', 
-        'content' => 'Room 302', 
-        'venue' => 'Room 302',
-        'start_time' => Carbon::now()->addHours(2), 
-        'end_time' => Carbon::now()->addHours(3),
-    ],
-    [
-        'event_id' => 502, 
-        'user_id' => 103, 
-        'board_id' => 3,
-        'title' => 'Student GA', 
-        'content' => 'Gymnasium', 
-        'venue' => 'Assembly',
-        'start_time' => Carbon::now()->addHours(18), 
-        'end_time' => Carbon::now()->addHours(20),
-    ],
-    [
-        'event_id' => 503, 
-        'user_id' => 102, 
-        'board_id' => 2,
-        'title' => 'Thesis Defense', 
-        'content' => 'Lab 1', 
-        'venue' => 'Lab 1',
-        'start_time' => Carbon::now()->addDays(5), 
-        'end_time' => Carbon::now()->addDays(5)->addHours(2),
-    ],
-];
 
-foreach ($events as $e) {
-    Event::create($e);
-}
+        $events = [
+            [
+                'event_id' => 501, 
+                'user_id' => 101, 
+                'board_id' => 1,
+                'title' => 'IT Faculty Meeting', 
+                'content' => 'Room 302', 
+                'venue' => 'Room 302',
+                'day_range' => (string) Carbon::now()->addHours(2)->day, // ADDED: dynamic day
+                'start_time' => Carbon::now()->addHours(2), 
+                'end_time' => Carbon::now()->addHours(3),
+            ],
+            [
+                'event_id' => 502, 
+                'user_id' => 103, 
+                'board_id' => 3,
+                'title' => 'Student GA', 
+                'content' => 'Gymnasium', 
+                'venue' => 'Assembly',
+                'day_range' => (string) Carbon::now()->addHours(18)->day, // ADDED: dynamic day
+                'start_time' => Carbon::now()->addHours(18), 
+                'end_time' => Carbon::now()->addHours(20),
+            ],
+            [
+                'event_id' => 503, 
+                'user_id' => 102, 
+                'board_id' => 2,
+                'title' => 'Thesis Defense', 
+                'content' => 'Lab 1', 
+                'venue' => 'Lab 1',
+                'day_range' => (string) Carbon::now()->addDays(5)->day, // ADDED: dynamic day
+                'start_time' => Carbon::now()->addDays(5), 
+                'end_time' => Carbon::now()->addDays(5)->addHours(2),
+            ],
+        ];
+
+        foreach ($events as $e) {
+            Event::create($e);
+        }
 
         // 5. Seed Many Manual Notifications
         $notifications = [
@@ -84,6 +88,7 @@ foreach ($events as $e) {
             ['reciepient_id' => 103, 'announcement_id' => 1002, 'event_id' => null, 'message' => 'Andres Bonifacio liked the Foundation Day post', 'is_read' => false],
             ['reciepient_id' => 102, 'announcement_id' => null, 'event_id' => null, 'message' => 'Your profile was updated successfully', 'is_read' => true],
         ];
+        
         foreach ($notifications as $n) Notification::create($n);
     }
 }

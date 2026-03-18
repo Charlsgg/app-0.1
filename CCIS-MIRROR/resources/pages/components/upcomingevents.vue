@@ -24,6 +24,7 @@ const events = ref<AppEvent[]>([])
 const isLoading = ref(true)
 const errorMessage = ref('')
 
+// FIXED: Wrapped the logic properly inside the async function block
 const fetchUpcomingEvents = async () => {
     isLoading.value = true
     errorMessage.value = ''
@@ -45,7 +46,6 @@ const fetchUpcomingEvents = async () => {
     }
 }
 
-// 2. Moved onMounted to execute AFTER the fetch function is defined
 onMounted(() => {
     fetchUpcomingEvents()
 })
@@ -57,7 +57,7 @@ const formatDate = (dateString?: string) => {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
-// 3. Added a helper to format the full event date
+// Added a helper to format the full event date
 const formatFullDate = (dateString?: string) => {
     if (!dateString) return 'TBA'
     const date = new Date(dateString)

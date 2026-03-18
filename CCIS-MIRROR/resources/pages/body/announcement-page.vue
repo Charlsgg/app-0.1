@@ -7,7 +7,6 @@ import { ref, shallowRef, onMounted } from 'vue'
 import { Megaphone } from 'lucide-vue-next'
 import { useTheme } from '../composable/usetheme.ts'
 
-
 import AppSidebar from '../components/appsidebar.vue'
 import AppNavbar from '../components/appnavbar.vue'
 import GeneralAnnouncements from '../components/generalannouncements.vue'
@@ -46,6 +45,7 @@ onMounted(() => {
         csrfToken.value = tokenTag.content
     }
 })
+
 const fetchBoardData = async (topic: string | null = null) => {
     try {
         isLoading.value = true
@@ -102,22 +102,24 @@ const handleFilterChange = (role: string | null) => {
             <div class="flex-1 overflow-y-auto p-4 md:p-8 w-full custom-scrollbar">
                 <div class="max-w-7xl mx-auto pb-12 flex flex-col xl:flex-row gap-8 items-start">
                     
-                    <GeneralAnnouncements 
-                        :announcements="announcements"
-                        :is-loading="isLoading"
-                    />
+                    <div class="w-full flex-1 order-2 xl:order-1">
+                        <GeneralAnnouncements 
+                            :announcements="announcements"
+                            :is-loading="isLoading"
+                        />
+                    </div>
 
-                   <aside class="w-full xl:w-80 shrink-0 flex flex-col gap-6 sticky top-0">
-        <UpcomingDeadlines 
-            :events="upcomingEvents"
-            :is-dark="isDark"
-        />
-        
-        <AnnouncementFilters 
-            :stats="stats"
-            @filter-change="handleFilterChange"
-        />
-    </aside>
+                    <aside class="w-full xl:w-80 shrink-0 flex flex-col gap-6 order-1 xl:order-2 xl:sticky xl:top-0">
+                        <UpcomingDeadlines 
+                            :events="upcomingEvents"
+                            :is-dark="isDark"
+                        />
+                        
+                        <AnnouncementFilters 
+                            :stats="stats"
+                            @filter-change="handleFilterChange"
+                        />
+                    </aside>
 
                 </div>
             </div>

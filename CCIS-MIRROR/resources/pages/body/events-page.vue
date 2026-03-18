@@ -13,7 +13,9 @@ import MonthYearSelector from '../components/monthyearselector.vue'
 import UpcomingEvents from '../components/upcomingevents.vue'
 import CalendarGrid from '../components/calendargrid.vue'
 
-const selectedEvents = ref<Array<{title: string, venue: string, description: string, start_time: string}>>([])
+// UPDATED: Added end_time to the array type definition
+const selectedEvents = ref<Array<{title: string, venue: string, description: string, start_time: string, end_time?: string | null}>>([])
+
 interface CalendarEvent {
     id: string | number
     title: string
@@ -21,9 +23,9 @@ interface CalendarEvent {
     venue?: string
     description?: string
     start_time?: string  
-    end_time?: string    
+    end_time?: string | null   // <-- Add | null here
     startTime?: string   
-    endTime?: string     
+    endTime?: string | null    // <-- Add | null here
 }
 
 interface CalendarDay {
@@ -43,7 +45,7 @@ interface DatabaseEvent {
     venue?: string 
     Venue?: string
     start_time: string
-    end_time?: string
+    end_time?: string | null // Make sure this can accept null from the DB
     event_month?: number
     event_year?: number
 }
@@ -67,8 +69,6 @@ const isLoading = ref(false)
 const showCreateModal = ref(false)
 const showEventDetailModal = ref(false)
 const selectedDay = ref<CalendarDay | null>(null)
-
-const selectedEvent = ref<{title: string, venue: string, description: string, start_time: string} | null>(null)
 
 const fetchEvents = async () => {
     isLoading.value = true
@@ -142,9 +142,9 @@ const calendarDays = computed(() => {
             venue: event.venue || event.Venue, 
             description: event.content,        
             start_time: event.start_time,
-            end_time: event.end_time,
+            end_time: event.end_time, // This now safely accepts null
             startTime: event.start_time, 
-            endTime: event.end_time,     
+            endTime: event.end_time,  // This now safely accepts null
             color: theme.value.accent
         }
 
@@ -167,12 +167,13 @@ const calendarDays = computed(() => {
 const openEventDetail = (day: CalendarDay) => {
     selectedDay.value = day
     if (day.events && day.events.length > 0) {
-        // Map the entire array of events for that day
+        // UPDATED: Include end_time mapping
         selectedEvents.value = day.events.map(e => ({
             title: e.title,
             venue: e.venue || 'TBA',
             description: e.description || 'No description provided.',
-            start_time: e.start_time || ''
+            start_time: e.start_time || '',
+            end_time: e.end_time || null
         }))
         showEventDetailModal.value = true
     } else {
@@ -184,12 +185,14 @@ const openUpcomingEventDetail = async (eventId: number) => {
     const event = dbEvents.value.find(e => e.event_id === eventId)
     
     if (event) {
-        selectedEvent.value = {
+        // UPDATED: Include end_time
+        selectedEvents.value = [{
             title: event.title,
             venue: event.venue || event.Venue || 'TBA',
             description: event.content,
-            start_time: event.start_time
-        }
+            start_time: event.start_time,
+            end_time: event.end_time || null
+        }]
         showEventDetailModal.value = true
     } else {
         try {
@@ -198,12 +201,14 @@ const openUpcomingEventDetail = async (eventId: number) => {
             const futureEvent = data.events?.find((e: any) => e.event_id === eventId || e.id === eventId)
             
             if (futureEvent) {
-                selectedEvent.value = {
+                // UPDATED: Include end_time
+                selectedEvents.value = [{
                     title: futureEvent.title,
                     venue: futureEvent.venue || futureEvent.Venue || 'TBA', 
                     description: futureEvent.content || 'No description provided.',
-                    start_time: futureEvent.start_time
-                }
+                    start_time: futureEvent.start_time,
+                    end_time: futureEvent.end_time || null
+                }]
                 showEventDetailModal.value = true
             }
         } catch (error) {
@@ -250,10 +255,10 @@ onMounted(() => {
                 @toggle-sidebar="isSidebarOpen = true"
             />
 
-            <div class="flex-1 overflow-y-auto p-4 md:p-8 w-full no-scrollbar">
-                <div class="max-w-7xl mx-auto pb-12">
+            <div class="flex-1 overflow-y-auto p-4 md:p-8 w-full min-w-0 custom-scrollbar">
+                <div class="max-w-7xl mx-auto pb-12 w-full min-w-0">
                     
-                    <div class="mb-6 md:mb-8 flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+                    <div class="mb-6 md:mb-8 flex flex-col xl:flex-row xl:items-center justify-between gap-4 w-full">
                         <div class="flex flex-col gap-2">
                             <h3 class="text-2xl md:text-3xl font-bold tracking-tight" :style="styles.textPrimary">
                                 Academic Calendar
@@ -263,17 +268,18 @@ onMounted(() => {
                             </p>
                         </div>
 
-                        <div class="flex flex-wrap items-center gap-3">
+                        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full xl:w-auto">
                             <MonthYearSelector 
                                 :theme="theme" 
                                 :surface="surface" 
                                 v-model:month="currentMonth"
                                 v-model:year="currentYear"
+                                class="w-full sm:w-auto"
                             />
 
                             <button 
                                 @click="showCreateModal = true" 
-                                class="flex items-center gap-2 px-4 h-10 rounded-lg font-semibold text-sm transition-all"
+                                class="flex items-center justify-center gap-2 px-4 h-10 w-full sm:w-auto rounded-lg font-semibold text-sm transition-all"
                                 :style="styles.button"
                                 @mouseenter="(e: MouseEvent) => (e.currentTarget as HTMLElement).style.opacity = '0.9'"
                                 @mouseleave="(e: MouseEvent) => (e.currentTarget as HTMLElement).style.opacity = '1'"
@@ -284,21 +290,30 @@ onMounted(() => {
                         </div>
                     </div>
 
-                    <div class="flex flex-col xl:flex-row gap-6 items-start">
-                        <CalendarGrid 
-                            :theme="theme" 
-                            :surface="surface" 
-                            :styles="styles"
-                            :days="calendarDays"
-                            @show-detail="openEventDetail"
-                        />
+                    <div class="flex flex-col xl:flex-row gap-6 items-start w-full min-w-0">
+                        
+                        <div class="w-full xl:flex-1 min-w-0 max-w-full flex flex-col">
+                            <div class="w-full pb-4">
+                                <CalendarGrid 
+                                    :theme="theme" 
+                                    :surface="surface" 
+                                    :styles="styles"
+                                    :days="calendarDays"
+                                    @show-detail="openEventDetail"
+                                />
+                            </div>
+                        </div>
+                        
+                        <aside class="w-full xl:w-[350px] shrink-0 min-w-0">
+                            <UpcomingEvents 
+                                :theme="theme" 
+                                :surface="surface" 
+                                :styles="styles"
+                                @show-detail="openUpcomingEventDetail" 
+                                class="w-full"
+                            />
+                        </aside>
 
-                        <UpcomingEvents 
-                            :theme="theme" 
-                            :surface="surface" 
-                            :styles="styles"
-                            @show-detail="openUpcomingEventDetail" 
-                        />
                     </div>
 
                 </div>

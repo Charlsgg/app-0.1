@@ -15,13 +15,15 @@ const emit = defineEmits<{
     (e: 'updated'): void
 }>()
 
-// 1. Define the reactive form state
+// 1. Define the reactive form state, now including end_time
 const form = ref({
     title: '',
     month: new Date().getMonth() + 1,
     day_range: '',
     year: new Date().getFullYear(),
     venue: '',
+    time: '', // Start time
+    end_time: '', // NEW: End time field
     description: ''
 })
 
@@ -37,9 +39,24 @@ const resetForm = () => {
         day_range: '',
         year: new Date().getFullYear(),
         venue: '',
+        time: '',
+        end_time: '',
         description: ''
     }
     errorMessage.value = ''
+}
+
+// Optional helper to safely extract time (HH:mm) from a full date string if editing
+const extractTime = (dateStr?: string | null) => {
+    if (!dateStr) return ''
+    if (/^\d{2}:\d{2}(:\d{2})?$/.test(dateStr)) return dateStr.substring(0, 5) // Already time format
+    try {
+        const d = new Date(dateStr)
+        if (isNaN(d.getTime())) return ''
+        return d.toTimeString().substring(0, 5)
+    } catch (e) {
+        return ''
+    }
 }
 
 watch(() => props.eventData, (newVal) => {
@@ -50,6 +67,8 @@ watch(() => props.eventData, (newVal) => {
             day_range: newVal.day_range || '',
             year: newVal.event_year || new Date().getFullYear(),
             venue: newVal.venue || '',
+            time: newVal.time || extractTime(newVal.start_time) || '', 
+            end_time: newVal.end_time_input || extractTime(newVal.end_time) || '', // Load end time if editing
             description: newVal.content || ''
         }
     } else {
@@ -72,21 +91,33 @@ const submitEvent = async () => {
         const rawDayRange = form.value.day_range.toString().trim()
         let datesToProcess = [rawDayRange]
 
-        // NEW LOGIC: If we are creating a new event and the input contains commas, 
-        // split it into an array (e.g., "3, 5, 8" -> ["3", "5", "8"])
+        // Split into an array (e.g., "3, 5, 8" -> ["3", "5", "8"]) if not editing
         if (!isEditing.value && rawDayRange.includes(',')) {
             datesToProcess = rawDayRange.split(',').map(d => d.trim()).filter(d => d !== '')
         }
 
-        // Create an array of fetch promises so we can post them simultaneously
         const requests = datesToProcess.map(async (dateVal) => {
+            // Nullable end date logic: check if the dateVal is a range (e.g., "3-5")
+            let startDay = dateVal;
+            let endDay = null; // Default to null if not a range
+
+            if (dateVal.includes('-')) {
+                const parts = dateVal.split('-');
+                startDay = parts[0].trim();
+                endDay = parts[1].trim(); 
+            }
+
             const payload = {
                 title: form.value.title,
                 event_month: form.value.month,
                 event_year: form.value.year,
                 Venue: form.value.venue,
                 content: form.value.description,
-                day_range: dateVal // Sends "3-10" once, or loops "3", "5", "8"
+                time: form.value.time, // Start time
+                end_time: form.value.end_time || null, // NEW: Include end time
+                day_range: dateVal, 
+                start_day: startDay, 
+                end_day: endDay 
             }
 
             const response = await fetch(url, {
@@ -109,7 +140,6 @@ const submitEvent = async () => {
                     for (const field in errors) {
                         errorMessages.push(errors[field][0]);
                     }
-                    // Add the date to the error so the user knows which one failed
                     throw new Error(`Error for day(s) '${dateVal}': ` + errorMessages.join(' '));
                 } else {
                     throw new Error(`Error for day(s) '${dateVal}': ` + (responseData.message || 'Server error occurred.'));
@@ -121,7 +151,6 @@ const submitEvent = async () => {
         // Fire all requests simultaneously and wait for them to finish
         await Promise.all(requests)
 
-        // 3. Success! Reset form, tell parent to refresh data, and close modal
         resetForm()
         if (isEditing.value) {
             emit('updated')
@@ -138,12 +167,12 @@ const submitEvent = async () => {
     }
 }
 
-// Reset the form if the user clicks "Cancel" or the 'X'
 const handleClose = () => {
     resetForm()
     emit('close')
 }
 </script>
+
 <template>
     <Teleport to="body">
         <div v-if="show"
@@ -174,8 +203,7 @@ const handleClose = () => {
                         </div>
 
                         <div class="space-y-1">
-                            <label class="text-xs font-bold uppercase" :style="{ color: theme.accent }">Event
-                                Title</label>
+                            <label class="text-xs font-bold uppercase" :style="{ color: theme.accent }">Event Title</label>
                             <input v-model="form.title" required
                                 class="w-full rounded-lg font-display outline-none p-2 border"
                                 placeholder="e.g., Science Night" type="text"
@@ -184,8 +212,7 @@ const handleClose = () => {
 
                         <div class="grid grid-cols-3 gap-4">
                             <div class="space-y-1">
-                                <label class="text-xs font-bold uppercase"
-                                    :style="{ color: theme.accent }">Month</label>
+                                <label class="text-xs font-bold uppercase" :style="{ color: theme.accent }">Month</label>
                                 <select v-model="form.month"
                                     class="w-full rounded-lg font-display outline-none p-2 border appearance-none"
                                     :style="{ backgroundColor: surface.inputBg, borderColor: surface.inputBorder, color: surface.textPrimary }">
@@ -204,8 +231,7 @@ const handleClose = () => {
                                 </select>
                             </div>
                             <div class="space-y-1 col-span-2">
-                                <label class="text-xs font-bold uppercase" :style="{ color: theme.accent }">Day
-                                    Range</label>
+                                <label class="text-xs font-bold uppercase" :style="{ color: theme.accent }">Day Range</label>
                                 <input v-model="form.day_range" required
                                     class="w-full rounded-lg font-display outline-none p-2 border"
                                     placeholder="e.g., 3-10 or 15" type="text"
@@ -220,9 +246,9 @@ const handleClose = () => {
                                     class="w-full rounded-lg font-display outline-none p-2 border" type="number"
                                     :style="{ backgroundColor: surface.inputBg, borderColor: surface.inputBorder, color: surface.textPrimary }" />
                             </div>
+                            
                             <div class="space-y-1">
-                                <label class="text-xs font-bold uppercase"
-                                    :style="{ color: theme.accent }">Venue</label>
+                                <label class="text-xs font-bold uppercase" :style="{ color: theme.accent }">Venue</label>
                                 <input v-model="form.venue" required
                                     class="w-full rounded-lg font-display outline-none p-2 border"
                                     placeholder="Room or Hall" type="text"
@@ -230,9 +256,24 @@ const handleClose = () => {
                             </div>
                         </div>
 
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="space-y-1">
+                                <label class="text-xs font-bold uppercase" :style="{ color: theme.accent }">Start Time</label>
+                                <input v-model="form.time" required
+                                    class="w-full rounded-lg font-display outline-none p-2 border" type="time"
+                                    :style="{ backgroundColor: surface.inputBg, borderColor: surface.inputBorder, color: surface.textPrimary }" />
+                            </div>
+
+                            <div class="space-y-1">
+                                <label class="text-xs font-bold uppercase" :style="{ color: theme.accent }">End Time <span class="text-[9px] opacity-70 normal-case">(Optional)</span></label>
+                                <input v-model="form.end_time"
+                                    class="w-full rounded-lg font-display outline-none p-2 border" type="time"
+                                    :style="{ backgroundColor: surface.inputBg, borderColor: surface.inputBorder, color: surface.textPrimary }" />
+                            </div>
+                        </div>
+
                         <div class="space-y-1">
-                            <label class="text-xs font-bold uppercase" :style="{ color: theme.accent }">Brief
-                                Description</label>
+                            <label class="text-xs font-bold uppercase" :style="{ color: theme.accent }">Brief Description</label>
                             <textarea v-model="form.description" required
                                 class="w-full rounded-lg font-display outline-none p-3 border resize-none"
                                 placeholder="Describe the event..." rows="3"
@@ -257,8 +298,7 @@ const handleClose = () => {
                             @mouseleave="(e: MouseEvent) => { if (!isLoading) (e.currentTarget as HTMLElement).style.opacity = '1' }">
                             <span v-if="isLoading"
                                 class="material-symbols-outlined animate-spin text-[18px]">progress_activity</span>
-                            {{ isLoading ? (isEditing ? 'Updating...' : 'Publishing...') : (isEditing ? 'Update Event' :
-                                'Publish Event') }}
+                            {{ isLoading ? (isEditing ? 'Updating...' : 'Publishing...') : (isEditing ? 'Update Event' : 'Publish Event') }}
                         </button>
                     </div>
                 </form>

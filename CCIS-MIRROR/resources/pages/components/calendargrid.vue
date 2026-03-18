@@ -5,8 +5,12 @@ export interface CalendarEvent {
     id: string | number
     title: string
     color?: string
+    venue?: string
+    description?: string
+    start_time?: string
+    end_time?: string | null
     startTime?: string 
-    endTime?: string
+    endTime?: string | null
 }
 
 export interface CalendarDay {
@@ -30,7 +34,7 @@ defineEmits<{
 
 const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
-const formatTime = (timeStr?: string): string => {
+const formatTime = (timeStr?: string | null): string => {
     if (!timeStr) return ''
     try {
         const date = new Date(timeStr)
@@ -40,7 +44,7 @@ const formatTime = (timeStr?: string): string => {
     }
 }
 
-const isSameDay = (dateStr1?: string, dateStr2?: string): boolean => {
+const isSameDay = (dateStr1?: string | null, dateStr2?: string | null): boolean => {
     if (!dateStr1 || !dateStr2) return false
     const d1 = new Date(dateStr1)
     const d2 = new Date(dateStr2)

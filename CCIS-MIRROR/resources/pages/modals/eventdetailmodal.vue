@@ -11,7 +11,7 @@ interface CalendarEvent {
     description: string
     descriptionLong?: string
     start_time: string
-    end_time?: string
+    end_time?: string | null // Explicitly handle null
     category?: string
     attendees?: number
 }
@@ -49,19 +49,63 @@ const getDay = (dateStr?: string) => {
     return new Date(dateStr).getDate()
 }
 
-const formatFullDate = (dateStr?: string) => {
+const formatFullDate = (dateStr?: string | null) => {
     if (!dateStr) return 'TBA'
     return new Date(dateStr).toLocaleDateString('en-US', {
         month: 'short', day: 'numeric', year: 'numeric'
     })
 }
 
-const formatTime = (dateStr?: string) => {
+const formatTime = (dateStr?: string | null) => {
     if (!dateStr) return '--:--'
     return new Date(dateStr).toLocaleTimeString('en-US', {
         hour: '2-digit', minute: '2-digit'
     })
 }
+
+// Helper to determine what to show in the End Date card
+const getEndDateDisplay = (event: CalendarEvent | null) => {
+    if (!event) return { date: 'TBA', sub: '--:--' }
+    
+    if (event.end_time) {
+        const startDateString = new Date(event.start_time).toDateString()
+        const endDateString = new Date(event.end_time).toDateString()
+        
+        // If it starts and ends on the exact same day
+        if (startDateString === endDateString) {
+            return {
+                date: 'Same Day',
+                sub: formatTime(event.end_time) // Just show the time it ends
+            }
+        }
+        
+        // Multi-day event
+        return {
+            date: formatFullDate(event.end_time),
+            sub: formatTime(event.end_time)
+        }
+    }
+    
+    // No end_time provided (Null in DB)
+    return {
+        date: formatFullDate(event.start_time), 
+        sub: 'TBA / Ongoing' 
+    }
+}
+
+// Cleanly map the details for the template grid
+const eventDetails = computed(() => {
+    const ev = activeEvent.value;
+    if (!ev) return [];
+    
+    const endDateDisplay = getEndDateDisplay(ev);
+
+    return [
+        { label: 'Start', date: formatFullDate(ev.start_time), sub: formatTime(ev.start_time), icon: 'event_upcoming' },
+        { label: 'Ends', date: endDateDisplay.date, sub: endDateDisplay.sub, icon: 'event_available' },
+        { label: 'Venue', date: ev.venue || 'TBA', sub: ev.venueDetail || '', icon: 'location_on' }
+    ];
+})
 </script>
 
 <template>
@@ -159,11 +203,7 @@ const formatTime = (dateStr?: string) => {
                         <main class="flex-1 overflow-y-auto custom-scrollbar p-4 md:p-6 bg-transparent">
 
                             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4 mb-6 md:mb-8">
-                                <div v-for="item in [
-                                    { label: 'Start Date', date: formatFullDate(activeEvent?.start_time), sub: formatTime(activeEvent?.start_time) , icon: 'event_upcoming' },
-                                    { label: 'End Date', date: formatFullDate(activeEvent?.end_time || activeEvent?.start_time), sub: formatTime(activeEvent?.end_time) , icon: 'event_available' },
-                                    { label: 'Venue', date: activeEvent?.venue, sub: activeEvent?.venueDetail, icon: 'location_on' }
-                                ]" :key="item.label"
+                                <div v-for="item in eventDetails" :key="item.label"
                                     class="p-3 md:p-4 rounded-xl border shadow-sm flex sm:block items-center sm:items-start gap-4 sm:gap-0 transition-shadow"
                                     :style="{ backgroundColor: surface.cardBg, borderColor: theme.accent + '1a' }">
                                     <div class="w-8 h-8 md:w-10 md:h-10 shrink-0 rounded-lg flex items-center justify-center sm:mb-2"
@@ -192,7 +232,7 @@ const formatTime = (dateStr?: string) => {
                                 <div class="prose max-w-none space-y-4">
                                     <p class="text-sm md:text-base font-medium leading-relaxed italic border-l-4 pl-4 whitespace-pre-wrap wrap-break-word"
                                         :style="{ color: isDark ? '#cbd5e1' : '#334155', borderColor: theme.accent + '4d' }">
-                                        {{ activeEvent?.description }}
+                                        {{ activeEvent?.description || 'No description provided.' }}
                                     </p>
 
                                     <p v-if="activeEvent?.descriptionLong"
