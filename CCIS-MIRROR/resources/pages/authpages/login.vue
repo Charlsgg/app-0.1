@@ -68,14 +68,14 @@ const submitForm = async () => {
 
 <template>
   <div class="font-display relative min-h-screen w-full flex items-center justify-center bg-cover bg-center bg-no-repeat" 
-       style="background-image: url('app-0.1/CCIS-MIRROR/public/images/Moderncommercialbuildingunderclearsky.png');">
+       style="background-image: url('/images/ccislogo.png');">
     
     <div class="absolute inset-0 bg-[#221610]/80 backdrop-blur-sm"></div>
 
     <div class="relative z-10 w-full max-w-md px-6 py-12">
       <div class="flex flex-col items-center mb-10">
         <div class="w-24 h-24 mb-6 rounded-full bg-[#ec5b13]/10 flex items-center justify-center p-2 border border-[#ec5b13]/20">
-          <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuDG_dO6l3Iv-6JX_UNhD5aLwqWaE82yinzBCISMfNIl8I8DmZoLOyLjAy8JmHVZCLnY5xIqN2X0zkFKlAk1UAvyzRAo8cMY0RLFezoTrDPAZxbE1KMjq3U3rrUBNFXjxgO5DnzwCIhPSVMiK9LUSa1qYqv6NuIpYRSLc1X0lhFMr8tzCEdXuyQ9-63qunLm_YODLh2fyjUiAhwzXpsMJ7z472_-IgLN5jTSCF1jCSOQcK-k6L6MhhGmXdTU2KnYO3s0IGj6EqRZFDQ" alt="CSUCCIS Logo" class="w-full h-full object-contain" />
+          <img src="/images/logo-modified.png" alt="CSUCCIS Logo" class="w-full h-full object-contain" />
         </div>
         <h1 class="text-3xl font-bold tracking-tight text-slate-100 text-center uppercase">CSUCCIS</h1>
         <p class="text-slate-400 mt-2 text-center font-medium">College of Computing and Information Sciences</p>
