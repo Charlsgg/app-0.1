@@ -4,20 +4,28 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 
 class AnnouncementBoardController extends Controller
-{
+{   
     public function index(Request $request)
     {
         $filter = $request->query('topic'); 
+        $userId = Auth::id(); // Get current user ID to check like status
 
         // 1. Fetch Announcements
         $query = DB::table('all_announcements_view as av')
             ->leftJoin('user_profiles as up', 'av.author_id', '=', 'up.user_id')
+            // Optional: If you have a 'likes' table to track specific user likes, join it here
+            /* ->leftJoin('announcement_likes as al', function($join) use ($userId) {
+                $join->on('av.announcement_id', '=', 'al.announcement_id')
+                     ->where('al.user_id', '=', $userId);
+            }) */
             ->select(
                 'av.*', 
                 'up.profile_picture as real_avatar'
+                // DB::raw('IF(al.id IS NOT NULL, 1, 0) as is_liked') // Check if current user liked it
             );
 
         if ($filter) {
@@ -40,14 +48,10 @@ class AnnouncementBoardController extends Controller
                     'author_type'   => $first->author_type,
                     'author_avatar' => $first->real_avatar ?? null,
                     'likes_count'   => (int) ($first->likes_count ?? 0),
+                    // 'is_liked'   => (bool) ($first->is_liked ?? false), 
                     
-                    // UPDATED: Relative time (e.g., "18 mins ago")
                     'date'          => $rawDate->diffForHumans(),
-                    
-                    // UPDATED: Full formatted string for tooltips or specific views
                     'full_date'     => $rawDate->format('M d, Y h:i A'),
-                    
-                    // Raw timestamp for Vue formatDate() helper
                     'created_at'    => $first->announcement_date, 
                     
                     'attachments'   => $group->whereNotNull('attachment_id')->map(fn($item) => [
@@ -72,7 +76,6 @@ class AnnouncementBoardController extends Controller
                     'content'    => $event->content,
                     'venue'      => $event->venue,
                     'start_time' => $event->start_time,
-                    // Use diffForHumans for the "Posted" date here too
                     'created_at' => $event->created_at ? Carbon::parse($event->created_at)->diffForHumans() : 'Just now', 
                     'month'      => $dt->format('M'),
                     'day'        => $dt->format('d'),
@@ -97,6 +100,37 @@ class AnnouncementBoardController extends Controller
                 'lsg' => (int) $statsRaw->get('lsg_officer', 0),
                 'all' => (int) $statsRaw->sum(),
             ]
+        ]);
+    }
+
+    /**
+     * Handle the Like/Unlike toggle for an announcement.
+     */
+    public function like(Request $request, $id)
+    {
+        // 1. Verify the announcement exists in the main table
+        $announcement = DB::table('table_announcement')
+            ->where('announcement_id', $id)
+            ->first();
+
+        if (!$announcement) {
+            return response()->json(['message' => 'Announcement not found'], 404);
+        }
+
+        // 2. Increment the count in the database
+        // Note: In a production app, you should use a 'likes' table to prevent 1 user 
+        // from clicking like 100 times.
+        DB::table('table_announcement')
+            ->where('announcement_id', $id)
+            ->increment('likes_count');
+
+        $newCount = DB::table('table_announcement')
+            ->where('announcement_id', $id)
+            ->value('likes_count');
+
+        return response()->json([
+            'status' => 'success',
+            'likes_count' => (int) $newCount
         ]);
     }
 }

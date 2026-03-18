@@ -304,7 +304,7 @@ onMounted(() => {
                             </div>
                         </div>
                         
-                        <aside class="w-full xl:w-[350px] shrink-0 min-w-0">
+                        <aside class="w-full xl:w-87.5 shrink-0 min-w-0">
                             <UpcomingEvents 
                                 :theme="theme" 
                                 :surface="surface" 

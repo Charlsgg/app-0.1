@@ -135,6 +135,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/events/upcoming', [EventController::class, 'upcoming']);
 
     Route::prefix('api')->group(function () {
+        Route::post('/announcements/{id}/like', [AnnouncementBoardController::class, 'like']);
         Route::get('/my-announcements', [UserAnnouncementController::class, 'index']);
         Route::get('/board-data', [AnnouncementBoardController::class, 'index']);
         
