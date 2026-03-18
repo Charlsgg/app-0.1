@@ -31,6 +31,10 @@ class EventController extends Controller
         ]);
     }
 
+    /**
+     * Fetch upcoming events for the side panel.
+     * FIXED: Ensures created_at is returned to avoid "Recently" text in Vue.
+     */
     public function upcoming(Request $request)
     {
         // Include events that haven't started yet OR haven't ended yet
@@ -40,7 +44,11 @@ class EventController extends Controller
             })
             ->orderBy('start_time', 'asc') 
             ->take(6) 
-            ->get();
+            ->get()
+            ->map(function($event) {
+                // Explicitly ensuring the date is cast for the frontend
+                return $event;
+            });
 
         return response()->json([
             'status' => 'success',
@@ -50,7 +58,6 @@ class EventController extends Controller
 
     public function store(Request $request)
     {
-        // 1. Validate the incoming data
         $request->validate([
             'title' => 'required|string|max:255',
             'event_month' => 'required|integer|min:1|max:12',
@@ -58,50 +65,41 @@ class EventController extends Controller
             'Venue' => 'required|string|max:255',
             'content' => 'required|string',
             'time' => 'required|string',
-            'end_time' => 'nullable|string', // ADDED: Validate optional end time
+            'end_time' => 'nullable|string',
             'day_range' => 'required|string', 
             'start_day' => 'required|integer|min:1|max:31', 
             'end_day' => 'nullable|integer|min:1|max:31', 
         ]);
 
-        // Parse the user's selected start time (e.g., "14:30")
         $timeParts = explode(':', $request->time);
         $hours = (int) $timeParts[0];
         $minutes = (int) $timeParts[1];
 
-        // Create the start time based on the specific start_day and time
         $startTime = Carbon::create($request->event_year, $request->event_month, $request->start_day, $hours, $minutes, 0);
         
-        // Nullable & Specific End Time Logic
         $endTime = null;
-        
-        // Determine the actual end day (If no end_day is provided but an end_time IS, it's a same-day event)
         $actualEndDay = $request->end_day ?: ($request->filled('end_time') ? $request->start_day : null);
 
         if (!is_null($actualEndDay)) {
-            $endHours = 23;
-            $endMinutes = 59;
-            $endSeconds = 59;
+            $endHours = 23; $endMinutes = 59; $endSeconds = 59;
 
-            // If the user provided a specific end time, parse it
             if ($request->filled('end_time')) {
                 $endTimeParts = explode(':', $request->end_time);
                 $endHours = (int) $endTimeParts[0];
                 $endMinutes = (int) $endTimeParts[1];
-                $endSeconds = 0; // Reset seconds since an exact time was given
+                $endSeconds = 0;
             }
 
             $endTime = Carbon::create($request->event_year, $request->event_month, $actualEndDay, $endHours, $endMinutes, $endSeconds);
         }
 
-        // 2. Save securely!
         $event = Event::create([
             'title' => $request->title,
             'content' => $request->input('content'),
             'venue' => $request->Venue, 
             'day_range' => $request->day_range, 
             'start_time' => $startTime,
-            'end_time' => $endTime, // Will save as NULL if no end_day and no end_time were provided
+            'end_time' => $endTime,
             'user_id' => Auth::id(),
             'board_id' => 1, 
         ]);
@@ -115,17 +113,12 @@ class EventController extends Controller
 
     public function update(Request $request, $id)
     {
-        // 1. Find the exact event
         $event = Event::find($id);
 
         if (!$event) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Event not found'
-            ], 404);
+            return response()->json(['status' => 'error', 'message' => 'Event not found'], 404);
         }
 
-        // 2. Validate the incoming data
         $request->validate([
             'title' => 'sometimes|required|string|max:255',
             'event_month' => 'sometimes|required|integer|min:1|max:12',
@@ -133,52 +126,38 @@ class EventController extends Controller
             'Venue' => 'sometimes|required|string|max:255',
             'content' => 'sometimes|required|string',
             'time' => 'sometimes|required|string',
-            'end_time' => 'nullable|string', // ADDED: Validate optional end time
+            'end_time' => 'nullable|string', 
             'day_range' => 'sometimes|required|string', 
             'start_day' => 'sometimes|required|integer|min:1|max:31',
             'end_day' => 'nullable|integer|min:1|max:31',
         ]);
 
         if ($request->has('title')) $event->title = $request->title;
-        if ($request->has('content')) {
-            $event->content = $request->input('content');
-        }
+        if ($request->has('content')) $event->content = $request->input('content');
         if ($request->has('Venue')) $event->venue = $request->Venue;
         if ($request->has('day_range')) $event->day_range = $request->day_range; 
         
-        // Update dates and times if the necessary fields are present
         if ($request->has('start_day') && $request->has('event_month') && $request->has('event_year') && $request->has('time')) {
-            
             $timeParts = explode(':', $request->time);
-            $hours = (int) $timeParts[0];
-            $minutes = (int) $timeParts[1];
-
-            $startTime = Carbon::create($request->event_year, $request->event_month, $request->start_day, $hours, $minutes, 0);
+            $startTime = Carbon::create($request->event_year, $request->event_month, $request->start_day, (int)$timeParts[0], (int)$timeParts[1], 0);
             
             $endTime = null;
             $actualEndDay = $request->end_day ?: ($request->filled('end_time') ? $request->start_day : null);
 
             if (!is_null($actualEndDay)) {
-                $endHours = 23;
-                $endMinutes = 59;
-                $endSeconds = 59;
-
-                // If the user provided a specific end time, parse it
+                $endHours = 23; $endMinutes = 59;
                 if ($request->filled('end_time')) {
                     $endTimeParts = explode(':', $request->end_time);
                     $endHours = (int) $endTimeParts[0];
                     $endMinutes = (int) $endTimeParts[1];
-                    $endSeconds = 0;
                 }
-
-                $endTime = Carbon::create($request->event_year, $request->event_month, $actualEndDay, $endHours, $endMinutes, $endSeconds);
+                $endTime = Carbon::create($request->event_year, $request->event_month, $actualEndDay, $endHours, $endMinutes, 0);
             }
 
             $event->start_time = $startTime;
             $event->end_time = $endTime;
         }
 
-        // 4. Save to database
         $event->save();
 
         return response()->json([
@@ -190,22 +169,11 @@ class EventController extends Controller
 
     public function destroy($id)
     {
-        // 1. Find the exact event
         $event = Event::find($id);
-
         if (!$event) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Event not found'
-            ], 404);
+            return response()->json(['status' => 'error', 'message' => 'Event not found'], 404);
         }
-
-        // 2. Delete it
         $event->delete();
-
-        return response()->json([
-            'status' => 'success', 
-            'message' => 'Event deleted successfully'
-        ]);
+        return response()->json(['status' => 'success', 'message' => 'Event deleted successfully']);
     }
 }

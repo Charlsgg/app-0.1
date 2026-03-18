@@ -36,11 +36,6 @@ const defaultAvatar = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/200
 
 <template>
     <div class="flex flex-col gap-6">
-        <div class="flex items-center justify-between mb-2">
-            <h2 class="text-xl font-bold" :style="styles.textPrimary">Recent Announcements</h2>
-            <button :style="{ color: theme.accent }" class="text-sm font-semibold hover:underline">View All</button>
-        </div>
-
         <div
             v-if="announcements.length === 0"
             class="text-center py-12 italic"

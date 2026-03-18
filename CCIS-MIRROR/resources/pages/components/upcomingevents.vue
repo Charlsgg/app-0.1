@@ -51,10 +51,21 @@ onMounted(() => {
 })
 
 // Quick helper to format the 'posted' date
+// Updated helper to handle missing or invalid dates
 const formatDate = (dateString?: string) => {
-    if (!dateString) return 'Recently'
+    if (!dateString) return 'Just now'
+    
     const date = new Date(dateString)
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    
+    // Check if the date is actually valid
+    if (isNaN(date.getTime())) {
+        return 'Recently'
+    }
+
+    return date.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric' 
+    })
 }
 
 // Added a helper to format the full event date

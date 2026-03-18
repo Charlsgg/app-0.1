@@ -1,10 +1,10 @@
 import { createApp } from 'vue'
-import Login from '../pages/authpages/Login.vue'
+import Login from '../pages/authpages/login.vue'
 import Home from '../pages/body/home-page.vue'
 import Events from '../pages/body/events-page.vue'
 import Announcements from '../pages/body/announcement-page.vue'
 import Profile from '../pages/body/profile-page.vue'
-import PublicBoard from './components/PublicBoard.vue' 
+import PublicBoard from '../pages/boards/publicboard.vue' 
 import Signup from '../pages/authpages/signup.vue'
 import ForgotPassword from '../pages/authpages/forgot-password.vue'
 const el = document.getElementById('app')

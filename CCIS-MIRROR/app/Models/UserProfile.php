@@ -11,9 +11,9 @@ class UserProfile extends Model
     use SoftDeletes;
 
     protected $table = 'user_profiles';
-
     protected $primaryKey = 'user_id';
-
+    
+    // This is vital since the ID matches the User ID and doesn't auto-increment itself
     public $incrementing = false;
 
     protected $fillable = [
@@ -27,7 +27,6 @@ class UserProfile extends Model
      */
     public function user(): BelongsTo
     {
-     
         return $this->belongsTo(User::class, 'user_id', 'user_id');
     }
 }

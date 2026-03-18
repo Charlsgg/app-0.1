@@ -25,6 +25,7 @@ return new class extends Migration
                 Venue,
                 start_time,
                 end_time,
+                created_at,
                 CAST(strftime('%m', start_time) AS INTEGER) AS event_month,
                 CAST(strftime('%Y', start_time) AS INTEGER) AS event_year
             FROM table_events

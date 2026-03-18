@@ -10,10 +10,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Drop it first just in case we need to re-run or update it later
         DB::statement("DROP VIEW IF EXISTS all_announcements_view");
 
-        // Create the global view linking announcements, authors, and attachments
         DB::statement("
             CREATE VIEW all_announcements_view AS
             SELECT 
@@ -22,10 +20,14 @@ return new class extends Migration
                 a.author_id,
                 u.name AS author_name,
                 u.user_type AS author_type,
+                -- ADDED: Join profile picture so the avatar shows up
+                up.profile_picture AS author_avatar, 
                 a.title,
                 a.content,
                 a.topic,
                 a.likes_count,
+                -- IMPORTANT: Keep the raw created_at so we can use diffForHumans()
+                a.created_at,
                 a.created_at AS announcement_date,
                 aa.attachment_id,
                 aa.file_path,
@@ -33,6 +35,9 @@ return new class extends Migration
             FROM table_announcement a
             JOIN table_users u 
                 ON a.author_id = u.user_id
+            -- ADDED: Join user_profiles to get the avatar
+            LEFT JOIN user_profiles up
+                ON u.user_id = up.user_id
             LEFT JOIN table_announcement_attachment aa 
                 ON a.announcement_id = aa.announcement_id 
                 AND aa.deleted_at IS NULL
@@ -41,9 +46,6 @@ return new class extends Migration
         ");
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         DB::statement("DROP VIEW IF EXISTS all_announcements_view");

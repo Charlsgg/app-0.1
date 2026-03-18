@@ -6,7 +6,7 @@
     
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>CSU CCIS</title>
+    <title>Forgot Password</title>
 
     @vite(['resources/css/app.css', 'resources/js/app.ts'])
 </head>

@@ -47,7 +47,7 @@ class DatabaseSeeder extends Seeder
                 'title' => 'IT Faculty Meeting', 
                 'content' => 'Room 302', 
                 'venue' => 'Room 302',
-                'day_range' => (string) Carbon::now()->addHours(2)->day, // ADDED: dynamic day
+                // REMOVED day_range here
                 'start_time' => Carbon::now()->addHours(2), 
                 'end_time' => Carbon::now()->addHours(3),
             ],
@@ -58,7 +58,7 @@ class DatabaseSeeder extends Seeder
                 'title' => 'Student GA', 
                 'content' => 'Gymnasium', 
                 'venue' => 'Assembly',
-                'day_range' => (string) Carbon::now()->addHours(18)->day, // ADDED: dynamic day
+                // REMOVED day_range here
                 'start_time' => Carbon::now()->addHours(18), 
                 'end_time' => Carbon::now()->addHours(20),
             ],
@@ -69,7 +69,7 @@ class DatabaseSeeder extends Seeder
                 'title' => 'Thesis Defense', 
                 'content' => 'Lab 1', 
                 'venue' => 'Lab 1',
-                'day_range' => (string) Carbon::now()->addDays(5)->day, // ADDED: dynamic day
+                // REMOVED day_range here
                 'start_time' => Carbon::now()->addDays(5), 
                 'end_time' => Carbon::now()->addDays(5)->addHours(2),
             ],
@@ -79,12 +79,9 @@ class DatabaseSeeder extends Seeder
             Event::create($e);
         }
 
-        // 5. Seed Many Manual Notifications
         $notifications = [
-            // Likes for Juan (101)
             ['reciepient_id' => 101, 'announcement_id' => 1001, 'event_id' => null, 'message' => 'Maria Clara liked your Capstone announcement', 'is_read' => false],
             ['reciepient_id' => 101, 'announcement_id' => null, 'event_id' => 501, 'message' => 'Apolinario Mabini liked your Meeting event', 'is_read' => true],
-            
             ['reciepient_id' => 103, 'announcement_id' => 1002, 'event_id' => null, 'message' => 'Andres Bonifacio liked the Foundation Day post', 'is_read' => false],
             ['reciepient_id' => 102, 'announcement_id' => null, 'event_id' => null, 'message' => 'Your profile was updated successfully', 'is_read' => true],
         ];
