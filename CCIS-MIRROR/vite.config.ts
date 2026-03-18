@@ -11,10 +11,11 @@ export default defineConfig({
     vue(),
   ],
   server: {
-    host: '0.0.0.0',      // Listen on all network interfaces
-    port: 5173,           // Default Vite port
+    host: '0.0.0.0', 
+    port: 5173,
     hmr: {
-      host: '192.168.1.15', // Your LAN IP
+      // Update this to match your current network IP
+      host: '192.168.200.112', 
       port: 5173,
     },
   },
