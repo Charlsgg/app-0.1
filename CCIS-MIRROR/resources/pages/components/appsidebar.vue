@@ -30,14 +30,21 @@ const navItems = computed(() => [
 </script>
 
 <template>
+    <div 
+        v-if="isOpen" 
+        @click="emit('close')"
+        class="fixed inset-0 z-40 bg-black/50 md:hidden transition-opacity duration-300"
+    ></div>
+
     <aside
         :class="[
-            'absolute inset-y-0 left-0 z-50 w-64 flex flex-col transition-transform duration-300 ease-in-out md:relative md:translate-x-0',
+            'fixed inset-y-0 left-0 z-50 w-64 flex flex-col transition-transform duration-300 ease-in-out md:relative md:translate-x-0',
             isOpen ? 'translate-x-0 shadow-2xl shadow-black/50' : '-translate-x-full',
         ]"
         :style="styles.sidebarBg"
     >
         <div class="p-6 flex flex-col h-full">
+            
             <button
                 @click="emit('close')"
                 class="md:hidden absolute top-6 right-6 transition-colors"
@@ -62,53 +69,51 @@ const navItems = computed(() => [
             </div>
 
             <nav class="flex-1 flex flex-col gap-1 overflow-y-auto pr-2 -mr-2">
-    <div class="mt-2 flex flex-col gap-1.5">
-        
-        <a
-            v-for="item in navItems"
-            :key="item.name"
-            :href="item.path"
-            class="relative flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200 cursor-pointer overflow-hidden group"
-            :style="currentPath === item.path 
-                ? {
-                    backgroundColor: `${theme.primary}1A`, 
-                    color: theme.primary,
-                    fontWeight: 700
-                } 
-                : {
-                    color: surface.textSecondary,
-                    fontWeight: 500
-                }"
-            @mouseenter="(e: MouseEvent) => {
-                if (currentPath !== item.path) {
-                    const el = e.currentTarget as HTMLElement
-                    el.style.backgroundColor = surface.hoverBg
-                    el.style.color = surface.textPrimary
-                }
-            }"
-            @mouseleave="(e: MouseEvent) => {
-                if (currentPath !== item.path) {
-                    const el = e.currentTarget as HTMLElement
-                    el.style.backgroundColor = 'transparent'
-                    el.style.color = surface.textSecondary
-                }
-            }"
-        >
-            <div 
-                v-if="currentPath === item.path"
-                class="absolute left-0 top-0 bottom-0 w-[6px] z-10"
-                :style="{ backgroundColor: theme.primary || '#f97316' }"
-            ></div>
+                <div class="mt-2 flex flex-col gap-1.5">
+                    <a
+                        v-for="item in navItems"
+                        :key="item.name"
+                        :href="item.path"
+                        class="relative flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200 cursor-pointer overflow-hidden group"
+                        :style="currentPath === item.path 
+                            ? {
+                                backgroundColor: `${theme.primary}1A`, 
+                                color: theme.primary,
+                                fontWeight: 700
+                            } 
+                            : {
+                                color: surface.textSecondary,
+                                fontWeight: 500
+                            }"
+                        @mouseenter="(e: MouseEvent) => {
+                            if (currentPath !== item.path) {
+                                const el = e.currentTarget as HTMLElement
+                                el.style.backgroundColor = surface.hoverBg
+                                el.style.color = surface.textPrimary
+                            }
+                        }"
+                        @mouseleave="(e: MouseEvent) => {
+                            if (currentPath !== item.path) {
+                                const el = e.currentTarget as HTMLElement
+                                el.style.backgroundColor = 'transparent'
+                                el.style.color = surface.textSecondary
+                            }
+                        }"
+                    >
+                        <div 
+                            v-if="currentPath === item.path"
+                            class="absolute left-0 top-0 bottom-0 w-[6px] z-10"
+                            :style="{ backgroundColor: theme.primary || '#f97316' }"
+                        ></div>
 
-            <component :is="item.icon" :size="20" class="shrink-0 z-20" />
-            
-            <span class="tracking-wide z-20">
-                {{ item.name }}
-            </span>
-        </a>
-
-    </div>
-</nav>
+                        <component :is="item.icon" :size="20" class="shrink-0 z-20" />
+                        
+                        <span class="tracking-wide z-20">
+                            {{ item.name }}
+                        </span>
+                    </a>
+                </div>
+            </nav>
 
             <div class="mt-auto pt-6 shrink-0" :style="{ borderTop: `1px solid ${surface.borderSubtle}` }">
                 <form action="/logout" method="POST">
@@ -123,4 +128,4 @@ const navItems = computed(() => [
             </div>
         </div>
     </aside>
-</template> 
+</template>

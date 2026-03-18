@@ -1,7 +1,20 @@
-<div 
-    id="app"
-    data-page="home-page"
-    data-user='@json(Auth::user())'>
-</div>
-<meta name="csrf-token" content="{{ csrf_token() }}">
-@vite(['resources/css/app.css', 'resources/js/app.ts'])
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Your App</title>
+    
+    @vite(['resources/css/app.css', 'resources/js/app.ts'])
+</head>
+<body>
+    <div 
+        id="app"
+        data-page="home-page"
+        data-user='@json(Auth::user())'>
+    </div>
+</body>
+</html>
