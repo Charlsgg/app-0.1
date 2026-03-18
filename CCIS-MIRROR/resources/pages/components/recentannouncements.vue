@@ -74,7 +74,7 @@ const defaultAvatar = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/200
             </div>
 
             <p 
-                class="leading-relaxed whitespace-pre-wrap text-sm md:text-base"
+                class="leading-relaxed break-all whitespace-pre-wrap text-sm md:text-base"
                 :style="styles.textPrimary"
                 v-html="post.content"
             ></p>

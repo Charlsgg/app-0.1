@@ -81,7 +81,7 @@ const defaultAvatar = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/200
         <article
             v-for="post in announcements"
             :key="post.id"
-            class="rounded-xl p-6 space-y-4 shadow-sm border transition-all"
+            class="rounded-xl p-6 space-y-4 shadow-sm border transition-all min-w-0 w-full overflow-hidden"
             :style="{ backgroundColor: surface.cardBg, borderColor: surface.borderSubtle }"
         >
             <div class="flex items-center gap-3">
@@ -96,7 +96,11 @@ const defaultAvatar = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/200
                 </div>
             </div>
 
-            <div class="text-sm leading-relaxed" :style="styles.textPrimary" v-html="post.content"></div>
+            <div 
+    class="text-sm leading-relaxed break-all whitespace-pre-wrap overflow-hidden" 
+    :style="styles.textPrimary" 
+    v-html="post.content"
+></div>
 
             <div v-if="post.attachments.length > 0" class="mt-4">
                 <button 

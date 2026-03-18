@@ -167,7 +167,7 @@
                 {{ selectedAnnouncement.title }}
               </h1>
 
-              <div class="prose prose-invert max-w-none text-white leading-relaxed text-lg mb-12"
+              <div class="prose prose-invert break-all max-w-none text-white leading-relaxed text-lg mb-12"
                 v-html="selectedAnnouncement.content"></div>
 
               <div v-if="selectedAnnouncement.attachments?.length" class="space-y-6">
