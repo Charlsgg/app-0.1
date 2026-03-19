@@ -200,8 +200,7 @@ onMounted(() => {
         />
 
         <main class="flex-1 flex flex-col h-full overflow-hidden min-w-0">
-            <AppNavbar
-                :user-name="name"
+           <AppNavbar
                 @toggle-sidebar="isSidebarOpen = true"
             />
 

@@ -1,16 +1,49 @@
 <script setup lang="ts">
+import { ref, onMounted } from 'vue'
 import { Terminal, Bell, Menu, Sun, Moon } from 'lucide-vue-next'
 import { useTheme } from '../composable/usetheme.ts'
 
-const props = defineProps<{
-    userName?: string
-}>()
-
+// Emits
 const emit = defineEmits<{
     toggleSidebar: []
 }>()
 
+// Composables
 const { theme, styles, surface, isDark, toggleMode } = useTheme()
+
+// Local State
+const userName = ref('')
+const userAvatar = ref('')
+const imageHasError = ref(false)
+
+// Methods
+const fetchUserData = async () => {
+    try {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+        
+        const response = await fetch('/api/navbar/user', {
+            headers: {
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
+            }
+        })
+        
+        if (response.ok) {
+            const data = await response.json()
+            userName.value = data.name
+            userAvatar.value = data.profile_picture
+        } else {
+            console.error('Failed to fetch user data:', response.statusText)
+        }
+    } catch (error) {
+        console.error('Network error loading navbar data:', error)
+    }
+}
+
+// Lifecycle Hooks
+onMounted(() => {
+    fetchUserData()
+})
 </script>
 
 <template>
@@ -18,7 +51,6 @@ const { theme, styles, surface, isDark, toggleMode } = useTheme()
         class="shrink-0 flex items-center justify-between px-4 md:px-8 py-3 md:py-4 z-30"
         :style="styles.headerBg"
     >
-        <!-- Left -->
         <div class="flex items-center gap-3">
             <button
                 @click="emit('toggleSidebar')"
@@ -40,12 +72,9 @@ const { theme, styles, surface, isDark, toggleMode } = useTheme()
             <div class="p-2 rounded-lg hidden sm:flex shadow-inner" :style="styles.iconBg">
                 <Terminal :size="20" />
             </div>
-            
         </div>
 
-        <!-- Right -->
         <div class="flex items-center gap-2 md:gap-4">
-            <!-- Dark / Light Toggle -->
             <button
                 @click="toggleMode"
                 class="p-2 rounded-lg transition-colors"
@@ -65,11 +94,21 @@ const { theme, styles, surface, isDark, toggleMode } = useTheme()
                 <Sun v-if="isDark" :size="20" />
                 <Moon v-else :size="20" />
             </button>
+            
             <div
-                class="h-8 w-8 md:h-9 md:w-9 shrink-0 rounded-full flex items-center justify-center text-xs font-bold"
+                class="h-8 w-8 md:h-9 md:w-9 shrink-0 rounded-full flex items-center justify-center text-xs font-bold overflow-hidden"
                 :style="styles.avatar"
             >
-                {{ userName?.charAt(0) || 'U' }}
+                <img 
+                    v-if="userAvatar && !imageHasError" 
+                    :src="userAvatar" 
+                    :alt="userName || 'User'"
+                    class="h-full w-full object-cover"
+                    @error="imageHasError = true"
+                />
+                <span v-else>
+                    {{ userName?.charAt(0) || 'U' }}
+                </span>
             </div>
         </div>
     </header>

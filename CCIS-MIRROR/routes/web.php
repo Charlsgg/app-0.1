@@ -7,7 +7,7 @@ use App\Http\Controllers\EventController;
 use App\Http\Controllers\UserProfileController;
 use App\Http\Controllers\UserAnnouncementController;
 use App\Http\Controllers\AnnouncementBoardController;
-
+use App\Http\Controllers\NavbarController;
 /*
 |--------------------------------------------------------------------------
 | PUBLIC WEB ROUTES
@@ -136,6 +136,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/profile', [UserProfileController::class, 'show']);
         Route::post('/profile', [UserProfileController::class, 'update']);
         Route::put('/profile/password', [UserProfileController::class, 'updatePassword']);
+        Route::get('/navbar/user', [NavbarController::class, 'getUserData']);
     });
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
