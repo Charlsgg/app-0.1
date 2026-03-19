@@ -41,16 +41,27 @@ Route::get('/announcements-board', function () {
     return view('announcement-board');
 })->name('announcements.board');
 
+Route::get('/announcements-events', function () {
+    return view('announcements-events');
+})->name('announcements.events');
+
+/*
+|--------------------------------------------------------------------------
+| PUBLIC API ROUTES (No login required)
+|--------------------------------------------------------------------------
+*/
 /*
 |--------------------------------------------------------------------------
 | PUBLIC API ROUTES (No login required)
 |--------------------------------------------------------------------------
 */
 Route::prefix('api')->group(function () {
-    // This fixes the 404 Error! Vue asks for /api/board-data and it is now publicly available
     Route::get('/board-data', [AnnouncementBoardController::class, 'index']);
-     Route::post('/announcements/{id}/like', [AnnouncementBoardController::class, 'like']); 
+    Route::post('/announcements/{id}/like', [AnnouncementBoardController::class, 'like']); 
     Route::get('/events/upcoming', [EventController::class, 'upcoming']);
+    
+    // 👇 ADDED THIS HERE: Now the public calendar can read the events!
+    Route::get('/events', [EventController::class, 'index']); 
 });
 
 
@@ -117,9 +128,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/announcements', [AnnouncementController::class, 'index']);
         Route::post('/announcements', [AnnouncementController::class, 'store']);
         Route::put('/announcements/{id}', [AnnouncementController::class, 'update']);
-        Route::delete('/announcements/{id}', [AnnouncementController::class, 'destroy']);
-
-        Route::get('/events', [EventController::class, 'index']);   
+        Route::delete('/announcements/{id}', [AnnouncementController::class, 'destroy']); 
         Route::post('/events', [EventController::class, 'store']);     
         Route::put('/events/{id}', [EventController::class, 'update']);
         Route::delete('/events/{id}', [EventController::class, 'destroy']); 

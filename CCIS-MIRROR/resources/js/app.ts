@@ -5,6 +5,7 @@ import Events from '../pages/body/events-page.vue'
 import Announcements from '../pages/body/announcement-page.vue'
 import Profile from '../pages/body/profile-page.vue'
 import PublicBoard from '../pages/boards/publicboard.vue' 
+import PublicEvents from '../pages/boards/publicevents.vue'
 import Signup from '../pages/authpages/signup.vue'
 import ForgotPassword from '../pages/authpages/forgot-password.vue'
 const el = document.getElementById('app')
@@ -15,6 +16,8 @@ if (el) {
 
     if (page === 'announcement-board') {
         createApp(PublicBoard).mount('#app')
+    } else if (page === 'announcements-events') {
+    createApp(PublicEvents).mount('#app')
     } else if (page === 'home-page') {
         createApp(Home, { user }).mount('#app')
     } else if (page === 'events-page') {

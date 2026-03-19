@@ -63,21 +63,26 @@
     </header>
 
     <main class="max-w-6xl mx-auto relative z-10">
-      <section class="flex flex-col md:flex-row gap-4 mb-12 items-center">
-        <button @click="$router?.back()"
+      <section class="flex flex-col md:flex-row break gap-4 mb-12 items-center">
+        <button @click="goBack"
           class="flex items-center gap-2 px-6 py-3 rounded-full bg-white/5 hover:bg-orange-500/10 border border-white/10 hover:border-orange-500 transition-all duration-300 text-sm font-medium group shrink-0">
-          <span
-            class="material-symbols-outlined text-sm group-hover:-translate-x-1 transition-transform">arrow_back</span>
+          <span class="material-symbols-outlined text-sm group-hover:-translate-x-1 transition-transform">arrow_back</span>
           <span>Back</span>
         </button>
+        
         <div class="relative grow w-full">
           <input v-model="searchQuery"
             class="w-full glass-input rounded-xl px-12 py-3 text-lg hover:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all duration-300"
             placeholder="Search broadcasts..." type="text" />
           <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 opacity-40">search</span>
         </div>
-      </section>
 
+        <button @click="goToEvents"
+          class="flex items-center gap-2 px-6 py-3 rounded-full bg-white/5 hover:bg-orange-500/10 border border-white/10 hover:border-orange-500 transition-all duration-300 text-sm font-medium group shrink-0">
+          <span class="material-symbols-outlined text-sm group-hover:scale-110 transition-transform">event</span>
+          <span>Events</span>
+        </button>
+      </section>
       <TransitionGroup name="list" tag="div" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <article v-for="(item, index) in filteredAnnouncements" :key="item.id"
           class="glass-card p-6 flex flex-col h-full group relative overflow-hidden"
@@ -286,6 +291,13 @@ const fetchAnnouncements = async () => {
   } catch (e) { console.error("Sync Error", e) }
 }
 
+const goToEvents = () => {
+  window.location.href = '/announcements-events'
+}
+
+const goBack = () => {
+  window.history.back()
+}
 const handleLike = async (item) => {
   if (item.isProcessing || item.isCooldown) return
 

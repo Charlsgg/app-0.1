@@ -13,7 +13,6 @@ import MonthYearSelector from '../components/monthyearselector.vue'
 import UpcomingEvents from '../components/upcomingevents.vue'
 import CalendarGrid from '../components/calendargrid.vue'
 
-// UPDATED: Added end_time to the array type definition
 const selectedEvents = ref<Array<{title: string, venue: string, description: string, start_time: string, end_time?: string | null}>>([])
 
 interface CalendarEvent {
@@ -23,9 +22,9 @@ interface CalendarEvent {
     venue?: string
     description?: string
     start_time?: string  
-    end_time?: string | null   // <-- Add | null here
+    end_time?: string | null  
     startTime?: string   
-    endTime?: string | null    // <-- Add | null here
+    endTime?: string | null   
 }
 
 interface CalendarDay {
@@ -45,7 +44,7 @@ interface DatabaseEvent {
     venue?: string 
     Venue?: string
     start_time: string
-    end_time?: string | null // Make sure this can accept null from the DB
+    end_time?: string | null 
     event_month?: number
     event_year?: number
 }
