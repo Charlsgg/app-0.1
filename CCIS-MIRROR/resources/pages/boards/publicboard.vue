@@ -18,12 +18,14 @@
           </svg>
         </div>
         <div>
-          <div class="mb-1 text-[10px] font-bold tracking-[0.2em] uppercase opacity-70 text-orange-500">Butuan City
+          <div class="mb-1 text-[10px] font-bold tracking-[0.2em] uppercase opacity-70 text-orange-500">
+            {{ weatherCity }}
           </div>
           <div class="flex items-baseline gap-2">
-            <span class="text-4xl font-light tracking-tighter">28°C</span>
-            <span class="text-xs font-semibold tracking-widest uppercase opacity-60 text-orange-500">Partly
-              Cloudy</span>
+            <span class="text-4xl font-light tracking-tighter">{{ weatherTemp }}°C</span>
+            <span class="text-xs font-semibold tracking-widest uppercase opacity-60 text-orange-500">
+              {{ weatherDesc }}
+            </span>
           </div>
         </div>
       </div>
@@ -307,11 +309,12 @@
     </Teleport>
   </div>
 </template>
-
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import axios from 'axios'
+import { fetchWeatherApi } from 'openmeteo'
 
+// State
 const announcements = ref([])
 const searchQuery = ref('')
 const currentTime = ref('')
@@ -322,6 +325,12 @@ const isModalOpen = ref(false)
 const selectedAnnouncement = ref(null)
 const activePreview = ref(null)
 
+// Weather State
+const weatherCity = ref('Butuan City')
+const weatherTemp = ref('--')
+const weatherDesc = ref('Loading...')
+
+// Computed
 const daysInMonth = computed(() => {
   const now = new Date(); return new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
 })
@@ -329,6 +338,16 @@ const firstDayOfMonth = computed(() => {
   const now = new Date(); return new Date(now.getFullYear(), now.getMonth(), 1).getDay()
 })
 
+const filteredAnnouncements = computed(() => {
+  const q = searchQuery.value.toLowerCase()
+  return announcements.value.filter(a => 
+    a.title.toLowerCase().includes(q) || 
+    (a.content && a.content.toLowerCase().includes(q)) ||
+    (a.author_name && a.author_name.toLowerCase().includes(q))
+  )
+})
+
+// Methods
 const fetchAnnouncements = async () => {
   try {
     const response = await axios.get('/api/board-data')
@@ -350,22 +369,19 @@ const goToEvents = () => {
 const goBack = () => {
   window.history.back()
 }
+
 const handleLike = async (item) => {
   if (item.isProcessing || item.isCooldown) return
 
   const originalCount = item.likes_count
-
-  // Optimistic UI Update
   item.isProcessing = true
   item.likes_count += 1
-
-  // Trigger the quick visual pop
   item.isAnimating = true
+  
   setTimeout(() => {
     item.isAnimating = false 
   }, 500)
 
-  // Start the 10-second lockdown
   startCooldown(item)
 
   try {
@@ -393,14 +409,53 @@ const startCooldown = (item) => {
   }, 1000)
 }
 
-const filteredAnnouncements = computed(() => {
-  const q = searchQuery.value.toLowerCase()
-  return announcements.value.filter(a => 
-    a.title.toLowerCase().includes(q) || 
-    (a.content && a.content.toLowerCase().includes(q)) ||
-    (a.author_name && a.author_name.toLowerCase().includes(q))
-  )
-})
+const getWeatherDescription = (code) => {
+  const weatherCodes = {
+    0: 'Clear Sky', 1: 'Mainly Clear', 2: 'Partly Cloudy', 3: 'Overcast',
+    45: 'Fog', 48: 'Depositing Rime Fog', 51: 'Light Drizzle', 53: 'Moderate Drizzle',
+    55: 'Dense Drizzle', 56: 'Light Freezing Drizzle', 57: 'Dense Freezing Drizzle',
+    61: 'Slight Rain', 63: 'Moderate Rain', 65: 'Heavy Rain', 66: 'Light Freezing Rain',
+    67: 'Heavy Freezing Rain', 71: 'Slight Snow Fall', 73: 'Moderate Snow Fall',
+    75: 'Heavy Snow Fall', 77: 'Snow Grains', 80: 'Slight Rain Showers',
+    81: 'Moderate Rain Showers', 82: 'Violent Rain Showers', 85: 'Slight Snow Showers',
+    86: 'Heavy Snow Showers', 95: 'Thunderstorm', 96: 'Thunderstorm with Slight Hail',
+    99: 'Thunderstorm with Heavy Hail'
+  }
+  return weatherCodes[code] || 'Unknown Conditions'
+}
+
+const fetchWeather = async () => {
+  try {
+    const params = {
+      latitude: 8.9492,
+      longitude: 125.5436,
+      daily: "weather_code",
+      hourly: "temperature_2m",
+      current: ["temperature_2m", "weather_code"],
+      timezone: "auto",
+    };
+    
+    const url = "https://api.open-meteo.com/v1/forecast";
+    const responses = await fetchWeatherApi(url, params);
+    
+    const response = responses[0];
+    const current = response.current();
+    
+    // Note: The index in variables(index) maps directly to the array order in the params.
+    // variables(0) = temperature_2m
+    // variables(1) = weather_code
+    const currentTemp = current.variables(0).value();
+    const currentCode = current.variables(1).value();
+
+    weatherCity.value = 'Butuan City';
+    weatherTemp.value = Math.round(currentTemp);
+    weatherDesc.value = getWeatherDescription(currentCode);
+
+  } catch (e) {
+    console.error("Weather Sync Error", e)
+    weatherDesc.value = 'Weather Unavailable'
+  }
+}
 
 const openModal = (item) => {
   selectedAnnouncement.value = item
@@ -427,117 +482,19 @@ const updateClock = () => {
   currentDate.value = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }).toUpperCase()
   currentMonthYear.value = now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase()
 }
-
-let clockTimer, fetchTimer
+let clockTimer, fetchTimer, weatherTimer
 onMounted(() => {
-  fetchAnnouncements(); updateClock()
+  fetchAnnouncements()
+  updateClock()
+  fetchWeather()
   clockTimer = setInterval(updateClock, 1000)
   fetchTimer = setInterval(fetchAnnouncements, 30000)
+  weatherTimer = setInterval(fetchWeather, 1800000) 
 })
-onUnmounted(() => { clearInterval(clockTimer); clearInterval(fetchTimer) })
+
+onUnmounted(() => { 
+  clearInterval(clockTimer)
+  clearInterval(fetchTimer)
+  clearInterval(weatherTimer)
+})
 </script>
-
-<style scoped>
-.glow-text {
-  text-shadow: 0 0 30px rgba(249, 115, 22, 0.4);
-}
-
-.glass-card {
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 1.25rem;
-  transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
-}
-
-.glass-card:hover {
-  background: rgba(255, 255, 255, 0.07);
-  border-color: rgba(249, 115, 22, 0.4);
-  transform: translateY(-8px);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-}
-
-.glass-input {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: white;
-  outline: none;
-}
-
-.fill-icon {
-  font-variation-settings: 'FILL' 1;
-}
-
-@keyframes pop {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.4); }
-  100% { transform: scale(1.25); }
-}
-
-.animate-pop {
-  animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-}
-
-.list-enter-active {
-  animation: slideIn 0.6s ease forwards;
-  animation-delay: var(--delay);
-}
-
-@keyframes slideIn {
-  from { opacity: 0; transform: translateY(30px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* Base Modal Transitions */
-.modal-fade-enter-active,
-.modal-fade-leave-active {
-  transition: opacity 0.4s ease;
-}
-.modal-fade-enter-from,
-.modal-fade-leave-to {
-  opacity: 0;
-}
-.modal-fade-enter-active .modal-scale {
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.modal-fade-leave-active .modal-scale {
-  transition: all 0.3s cubic-bezier(0.5, 0, 0, 1);
-}
-.modal-fade-enter-from .modal-scale {
-  opacity: 0;
-  transform: scale(0.9) translateY(20px);
-}
-.modal-fade-leave-to .modal-scale {
-  opacity: 0;
-  transform: scale(0.95) translateY(10px);
-}
-
-/* File Preview Transitions */
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.3s ease;
-}
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
-
-/* Scrollbars */
-.custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
-}
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-}
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 10px;
-  border: 2px solid transparent;
-  background-clip: padding-box;
-}
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(249, 115, 22, 0.4); 
-  border: 2px solid transparent;
-  background-clip: padding-box;
-}
-</style>
