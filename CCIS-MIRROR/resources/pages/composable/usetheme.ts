@@ -1,6 +1,7 @@
 import { ref, computed, watch, onMounted } from 'vue'
 type Color = string 
 export interface ThemeColors {
+    text: Color | undefined
     primary: Color | undefined
     label: string
     abbr: string
@@ -20,6 +21,7 @@ const userType = ref<string>('is_instructor')
 // ─── Theme Map ──────────────────────────────────────────────────
 const themeMap: Record<string, ThemeColors> = {
     it_instructor: {
+        text: '#3b82f6',
         primary: '#3b82f6',
         label: 'Information Technology Society',
         abbr: 'IT',
@@ -30,6 +32,7 @@ const themeMap: Record<string, ThemeColors> = {
         profilePath: '/it/profile-page',
     },
     cs_instructor: {
+        text:'#9a0303',
         primary:'#9a0303',
         label: 'Computer Science',
         abbr: 'CS',
@@ -40,6 +43,7 @@ const themeMap: Record<string, ThemeColors> = {
         profilePath: '/cs/profile-page',
     },
     is_instructor: {
+        text:'#32DD41',
         primary:'#32DD41',
         label: 'Information System',
         abbr: 'IS',
@@ -50,6 +54,7 @@ const themeMap: Record<string, ThemeColors> = {
         profilePath: '/is/profile-page',
     },
     lsg_officer: {
+        text:'#ec5b13',
         primary: '#ec5b13',
         label: 'CCIS Local Student Government',
         abbr: 'LSG',

@@ -22,35 +22,27 @@ const months = [
 // Generate a dynamic range of years (e.g., 5 years back and 5 years forward)
 const years = computed(() => {
     // You can also base this on the actual current year rather than the selected year
-    const baseYear = new Date().getFullYear() 
+    const baseYear = new Date().getFullYear()
     return Array.from({ length: 11 }, (_, i) => baseYear - 5 + i)
 })
 </script>
 
 <template>
-    <div 
-        class="flex items-center gap-2 p-1 rounded-xl border"
-        :style="{ backgroundColor: surface.hoverBg, borderColor: surface.borderMedium }"
-    >
-        <select 
-            :value="month"
-            @change="emit('update:month', Number(($event.target as HTMLSelectElement).value))"
+    <div class="flex items-center gap-2 p-1 rounded-xl border"
+        :style="{ backgroundColor: surface.hoverBg, borderColor: surface.borderMedium }">
+        <select :value="month" @change="emit('update:month', Number(($event.target as HTMLSelectElement).value))"
             class="bg-transparent border-none outline-none focus:ring-0 text-sm font-bold cursor-pointer py-1.5 pl-3 pr-8 appearance-none"
-            :style="{ color: theme.accent }"
-        >
+            :style="{ color: theme.accent }">
             <option v-for="m in months" :key="m.value" :value="m.value">
                 {{ m.label }}
             </option>
         </select>
-        
+
         <div class="w-px h-4" :style="{ backgroundColor: surface.borderStrong }"></div>
-        
-        <select 
-            :value="year"
-            @change="emit('update:year', Number(($event.target as HTMLSelectElement).value))"
+
+        <select :value="year" @change="emit('update:year', Number(($event.target as HTMLSelectElement).value))"
             class="bg-transparent border-none outline-none focus:ring-0 text-sm font-bold cursor-pointer py-1.5 pl-3 pr-8 appearance-none"
-            :style="{ color: theme.accent }"
-        >
+            :style="{ color: theme.accent }">
             <option v-for="y in years" :key="y" :value="y">
                 {{ y }}
             </option>

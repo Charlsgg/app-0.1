@@ -123,8 +123,10 @@ Route::middleware('auth')->group(function () {
     
     // PROTECTED API ROUTES
     Route::prefix('api')->group(function () {
-        // You MUST be logged in to like a po 
-        Route::get('/my-announcements', [UserAnnouncementController::class, 'index']);
+        Route::post('/my-announcements/{id}', [UserAnnouncementController::class, 'update']);
+    
+    Route::delete('/my-announcements/{id}', [UserAnnouncementController::class, 'destroy']);
+    Route::get('/my-announcements', [UserAnnouncementController::class, 'index']);
         Route::get('/announcements', [AnnouncementController::class, 'index']);
         Route::post('/announcements', [AnnouncementController::class, 'store']);
         Route::put('/announcements/{id}', [AnnouncementController::class, 'update']);

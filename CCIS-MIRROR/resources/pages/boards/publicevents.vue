@@ -36,7 +36,7 @@
         </div>
       </div>
 
-      
+
       <div class="hidden lg:block animate-in fade-in slide-in-from-right duration-700">
         <div class="glass-card p-4 w-64 border-orange-500/10">
           <div class="flex justify-between items-center mb-4 text-orange-500">
@@ -307,32 +307,32 @@ const fetchEvents = async () => {
     })
 
     const contentType = response.headers.get("content-type");
-    
+
     // Check if Laravel ignored us and sent HTML anyway
     if (contentType && contentType.includes("text/html")) {
       const htmlText = await response.text();
       console.error("❌ LARAVEL RETURNED HTML ERROR:");
-      
+
       // This will grab the title tag out of Laravel's error page
       const titleMatch = htmlText.match(/<title>(.*?)<\/title>/);
       if (titleMatch) {
-         console.error("Error Title:", titleMatch[1]);
+        console.error("Error Title:", titleMatch[1]);
       } else {
-         console.error(htmlText.substring(0, 500)); // Print first 500 chars
+        console.error(htmlText.substring(0, 500)); // Print first 500 chars
       }
-      
+
       dbEvents.value = [];
       return;
     }
 
     if (!response.ok) {
-       console.error(`HTTP Error: ${response.status}`);
-       return;
+      console.error(`HTTP Error: ${response.status}`);
+      return;
     }
 
     const data = await response.json()
     dbEvents.value = data.events || []
-    
+
   } catch (error) {
     console.error('Network/Parsing Error:', error)
   } finally {
