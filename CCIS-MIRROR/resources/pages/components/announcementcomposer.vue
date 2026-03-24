@@ -120,7 +120,7 @@ const postAnnouncement = async () => {
                     >
                 </div>
                 <div class="space-y-1.5">
-                    <label for="topic" class="block text-sm font-bold" :style="styles.textPrimary">Topic</label>
+                    <label for="topic" class="block text-sm font-bold" :style="styles.textPrimary">Subject</label>
                     <input 
                         type="text" 
                         id="topic" 

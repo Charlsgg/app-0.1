@@ -23,7 +23,7 @@ const themeMap: Record<string, ThemeColors> = {
     it_instructor: {
         text: '#3b82f6',
         primary: '#3b82f6',
-        label: 'Information Technology Society',
+        label: 'Information Technology',
         abbr: 'IT',
         accent: '#3b82f6',
         homePath: '/it/home-page',

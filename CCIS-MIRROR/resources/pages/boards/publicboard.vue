@@ -159,7 +159,7 @@
               <div class="flex items-center gap-3">
                 <div class="w-2 h-8 bg-orange-500 rounded-full shadow-[0_0_10px_rgba(249,115,22,0.5)]"></div>
                 <h3 class="text-3xl font-light tracking-tight text-white">
-                  Broadcast <span class="text-orange-500 font-bold">Details</span>
+                  Announcement <span class="text-orange-500 font-bold">Details</span>
                 </h3>
               </div>
               <button @click="closeModal"
@@ -195,7 +195,7 @@
                   </div>
                   <div class="flex flex-col z-10 w-full">
                     <div class="flex justify-between items-center w-full mb-1">
-                      <span class="text-[10px] uppercase tracking-widest text-blue-400/70 font-bold">Topic</span>
+                      <span class="text-[10px] uppercase tracking-widest text-blue-400/70 font-bold">Subject</span>
                       <span class="font-bold text-white/90 text-[10px] px-2 py-0.5 rounded bg-white/10">{{ selectedAnnouncement.topic }}</span>
                     </div>
                     <div class="w-full h-px bg-white/5 my-1.5"></div>
@@ -441,9 +441,6 @@ const fetchWeather = async () => {
     const response = responses[0];
     const current = response.current();
     
-    // Note: The index in variables(index) maps directly to the array order in the params.
-    // variables(0) = temperature_2m
-    // variables(1) = weather_code
     const currentTemp = current.variables(0).value();
     const currentCode = current.variables(1).value();
 

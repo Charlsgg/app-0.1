@@ -16,10 +16,6 @@ class Announcement extends Model
     protected $primaryKey = 'announcement_id';
     protected $with = ['author.profile']; 
 
-    /**
-     * Define the prunable model query.
-     * This will permanently remove soft-deleted announcements older than 30 days.
-     */
 
     public function prunable()
     {

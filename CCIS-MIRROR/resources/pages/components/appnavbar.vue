@@ -69,9 +69,6 @@ onMounted(() => {
             >
                 <Menu :size="24" />
             </button>
-            <div class="p-2 rounded-lg hidden sm:flex shadow-inner" :style="styles.iconBg">
-                <Terminal :size="20" />
-            </div>
         </div>
 
         <div class="flex items-center gap-2 md:gap-4">

@@ -22,9 +22,6 @@ class AnnouncementController extends Controller
         return response()->json($announcements);
     }
 
-    /**
-     * Store a newly created announcement and its attachments.
-     */
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -55,7 +52,6 @@ class AnnouncementController extends Controller
             }
         }
 
-        // Updated: Load 'author.profile' before sending it back so the UI updates with the avatar instantly
         return response()->json(
             $announcement->load(['author.profile', 'attachments']), 
             201

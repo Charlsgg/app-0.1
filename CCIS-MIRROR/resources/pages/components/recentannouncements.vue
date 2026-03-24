@@ -262,7 +262,7 @@ const submitEdit = () => {
             </div>
         </div>
 
-        <div v-if="isEditModalOpen" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4">
+        <div v-if="isEditModalOpen" class="fixed inset-0 z-100 flex items-center justify-center bg-black/50 p-4">
             <div class="w-full max-w-lg rounded-xl shadow-lg flex flex-col overflow-hidden border"
                 :style="{ backgroundColor: surface.cardBg, borderColor: surface.borderSubtle }">
                 
@@ -282,7 +282,7 @@ const submitEdit = () => {
                     </div>
 
                     <div class="space-y-1">
-                        <label class="text-sm font-medium" :style="styles.textPrimary">Topic</label>
+                        <label class="text-sm font-medium" :style="styles.textPrimary">Subject</label>
                         <input v-model="editForm.topic" type="text" maxlength="255"
                             class="w-full px-3 py-2 rounded-lg border focus:outline-none focus:ring-2"
                             :style="{ backgroundColor: surface.inputBg, borderColor: surface.borderSubtle, color: theme.text }" />
@@ -303,7 +303,7 @@ const submitEdit = () => {
                             <div v-for="attachment in existingAttachments.filter(a => !deletedAttachmentIds.includes(a.attachment_id))" :key="attachment.attachment_id"
                                 class="flex items-center justify-between p-2 rounded border" :style="{ backgroundColor: surface.inputBg, borderColor: surface.borderSubtle }">
                                 <span class="text-sm truncate mr-2" :style="styles.textPrimary">{{ getFileName(attachment.file_path) }}</span>
-                                <button type="button" @click="removeExistingAttachment(attachment.attachment_id)" class="text-red-500 hover:text-red-700 p-1 flex-shrink-0">
+                                <button type="button" @click="removeExistingAttachment(attachment.attachment_id)" class="text-red-500 hover:text-red-700 p-1 shrink-0">
                                     <span class="material-symbols-outlined text-sm pointer-events-none">close</span>
                                 </button>
                             </div>
@@ -314,7 +314,7 @@ const submitEdit = () => {
                             <div v-for="(file, index) in newAttachments" :key="index"
                                 class="flex items-center justify-between p-2 rounded border" :style="{ backgroundColor: surface.inputBg, borderColor: surface.borderSubtle }">
                                 <span class="text-sm truncate mr-2" :style="styles.textPrimary">{{ file.name }}</span>
-                                <button type="button" @click="removeNewAttachment(index)" class="text-red-500 hover:text-red-700 p-1 flex-shrink-0">
+                                <button type="button" @click="removeNewAttachment(index)" class="text-red-500 hover:text-red-700 p-1 shrink-0">
                                     <span class="material-symbols-outlined text-sm pointer-events-none">close</span>
                                 </button>
                             </div>
@@ -352,12 +352,12 @@ const submitEdit = () => {
             <Transition name="fade">
                 <div 
                     v-if="activePreview" 
-                    class="fixed inset-0 z-[110] flex items-center justify-center bg-black/95 backdrop-blur-md p-4"
+                    class="fixed inset-0 z-110 flex items-center justify-center bg-black/95 backdrop-blur-md p-4"
                     @click.self="closePreview"
                 >
                     <button 
                         @click="closePreview" 
-                        class="absolute top-6 right-6 z-[120] w-12 h-12 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition-all"
+                        class="absolute top-6 right-6 z-120 w-12 h-12 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition-all"
                     >
                         <span class="material-symbols-outlined pointer-events-none">close</span>
                     </button>
