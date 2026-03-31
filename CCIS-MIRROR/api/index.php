@@ -22,6 +22,9 @@ foreach ($storageFolders as $folder) {
         mkdir($dir, 0777, true);
     }
 }
-
+$dbPath = '/tmp/database.sqlite';
+if (!file_exists($dbPath)) {
+    touch($dbPath);
+}
 // 4. Run the App
 $app->handleRequest(Illuminate\Http\Request::capture());
