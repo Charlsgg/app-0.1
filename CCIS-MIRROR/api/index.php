@@ -2,19 +2,22 @@
 use Illuminate\Http\Request;
 use Illuminate\Contracts\Http\Kernel;
 
-// 1. Load Autoloader
+// 1. Load Composer
 require __DIR__ . '/../vendor/autoload.php';
 
 // 2. Boot Application
 $app = require_once __DIR__ . '/../bootstrap/app.php';
 
-// 3. Setup Vercel Writable Storage
+// 3. Set Storage to Writable /tmp (Essential for Vercel)
 $app->useStoragePath('/tmp/storage');
+
+// 4. Ensure ALL required subfolders exist in /tmp
 $storageFolders = [
     '/app/public',
     '/framework/cache/data',
     '/framework/sessions',
-    '/framework/views',
+    '/framework/testing',
+    '/framework/views', // This fixes the [view] does not exist error
     '/logs'
 ];
 foreach ($storageFolders as $folder) {
@@ -22,19 +25,23 @@ foreach ($storageFolders as $folder) {
     if (!is_dir($dir)) mkdir($dir, 0777, true);
 }
 
-// 4. Force SQLite DB creation in /tmp
+// 5. Force the View Compiled Path to the writable directory
+config(['view.compiled' => '/tmp/storage/framework/views']);
+
+// 6. SQLite Initialization & Auto-Migration
 $dbPath = '/tmp/database.sqlite';
 if (!file_exists($dbPath)) {
     touch($dbPath);
-    // Explicitly run migrations because the DB is fresh
-    $app->make(Kernel::class)->bootstrap(); // Ensure app is bootstrapped
+    // Boot the kernel and run migrations
+    $kernel = $app->make(Kernel::class);
+    $kernel->bootstrap();
     \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
 }
 
-// 5. Handle Request with explicit binding
+// 7. Handle the Request
 $kernel = $app->make(Kernel::class);
 $request = Request::capture();
-$app->instance('request', $request); // Manually bind request to avoid "class not found"
+$app->instance('request', $request); 
 
 $response = $kernel->handle($request);
 $response->send();
