@@ -1,19 +1,30 @@
 <?php
-// Let's see if PHP is actually working
-echo "PHP is alive. Version: " . PHP_VERSION;
+// 1. Force errors to display
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
 
-// Check if files exist
-echo "<br>Checking files...";
-if (file_exists(__DIR__ . '/../vendor/autoload.php')) {
-    echo " ✅ Vendor found.";
-} else {
-    echo " ❌ Vendor MISSING.";
+echo "<h1>Vercel PHP Diagnostic</h1>";
+echo "PHP Version: " . PHP_VERSION . "<br>";
+
+// 2. Check for critical files
+$files = [
+    'Vendor Autoload' => __DIR__ . '/../vendor/autoload.php',
+    'Bootstrap App' => __DIR__ . '/../bootstrap/app.php',
+    'Public Index' => __DIR__ . '/../public/index.php'
+];
+
+foreach ($files as $name => $path) {
+    if (file_exists($path)) {
+        echo "✅ $name found.<br>";
+    } else {
+        echo "❌ $name NOT FOUND at $path<br>";
+    }
 }
 
-// Try to load composer and stop
-require __DIR__ . '/../vendor/autoload.php';
-echo "<br>Composer loaded.";
+// 3. Test Composer Load
+if (file_exists(__DIR__ . '/../vendor/autoload.php')) {
+    require __DIR__ . '/../vendor/autoload.php';
+    echo "✅ Composer Autoloader loaded successfully.<br>";
+}
 
-// If it gets here, the crash happens INSIDE Laravel's boot process
-$app = require_once __DIR__ . '/../bootstrap/app.php';
-echo "<br>Laravel booted.";
+echo "<h2>If you see this, PHP is working. The crash happens inside Laravel.</h2>";
